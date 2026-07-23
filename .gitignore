@@ -12,11 +12,30 @@ research-input/
 extracted-original-assets/
 original-game/
 original-assets/
-*.exe
-*.dll
-*.sav
+
+# Original executables, libraries, and saves are forbidden in local research areas.
+# Keep these patterns scoped so project-owned synthetic binary fixtures remain possible.
+original/**/*.exe
+original/**/*.dll
+original/**/*.sav
+reference/**/*.exe
+reference/**/*.dll
+reference/**/*.sav
+research-input/**/*.exe
+research-input/**/*.dll
+research-input/**/*.sav
+extracted-original-assets/**/*.exe
+extracted-original-assets/**/*.dll
+extracted-original-assets/**/*.sav
+original-game/**/*.exe
+original-game/**/*.dll
+original-game/**/*.sav
+original-assets/**/*.exe
+original-assets/**/*.dll
+original-assets/**/*.sav
+
 *.user
 *.suo
 *.nupkg
 coverage/
-
+artifacts/
