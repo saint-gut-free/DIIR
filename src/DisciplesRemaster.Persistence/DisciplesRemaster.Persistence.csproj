@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+</PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DisciplesRemaster.Core\DisciplesRemaster.Core.csproj" />
+    <ProjectReference Include="..\DisciplesRemaster.Content\DisciplesRemaster.Content.csproj" />
+  </ItemGroup>
+
+</Project>

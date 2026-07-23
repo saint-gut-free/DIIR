@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+</PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Core\DisciplesRemaster.Core.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Content\DisciplesRemaster.Content.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Persistence\DisciplesRemaster.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
