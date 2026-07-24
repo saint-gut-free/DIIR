@@ -1,0 +1,50 @@
+{
+  "formatVersion": 1,
+  "experimentId": "MAP-000A",
+  "title": "First synthetic minimal-map save",
+  "status": "planned",
+  "applicability": "requires-manual-editor-check",
+  "baselineExperimentId": null,
+  "comparisonExperimentIds": [],
+  "environment": {
+    "gameEdition": null,
+    "gameVersion": null,
+    "editorFilename": "ScenEdit.exe",
+    "editorVersion": null,
+    "operatingSystem": null,
+    "locale": null
+  },
+  "operation": {
+    "type": "create_baseline",
+    "entityType": "map",
+    "entitySafeId": "synthetic-minimal-map",
+    "property": null,
+    "before": null,
+    "after": null,
+    "coordinates": null,
+    "description": "Manually create a minimal map for the first save-noise baseline."
+  },
+  "artifacts": {
+    "baseline": null,
+    "result": {
+      "safeName": "MAP-000A.sg",
+      "sha256": null,
+      "sizeBytes": null,
+      "role": "result",
+      "relativeResearchLabel": "MAP-000A"
+    }
+  },
+  "expectedDifference": "Establish the first controlled baseline; no format inference is expected.",
+  "observations": [],
+  "hypotheses": [],
+  "conclusions": [],
+  "evidenceReferences": [],
+  "notes": [
+    "This record is fictional metadata and is not linked to an original file."
+  ],
+  "tags": [
+    "synthetic",
+    "baseline-noise"
+  ],
+  "invalidatedReason": null
+}

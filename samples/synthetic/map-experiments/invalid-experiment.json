@@ -1,0 +1,51 @@
+{
+  "experimentId": "not-a-map-id",
+  "title": "",
+  "status": "finished",
+  "baselineExperimentId": "not-a-map-id",
+  "comparisonExperimentIds": [
+    "MAP-999",
+    "MAP-999"
+  ],
+  "operation": {
+    "type": "guess_binary_layout",
+    "description": "This deliberately invalid synthetic record exercises validation."
+  },
+  "artifacts": {
+    "result": {
+      "safeName": "invalid-synthetic.sg",
+      "sha256": "not-a-hash",
+      "sizeBytes": -1,
+      "role": "result"
+    }
+  },
+  "observations": [],
+  "hypotheses": [
+    {
+      "hypothesisId": "HYP-DUPLICATE",
+      "statement": "A deliberately unsupported synthetic hypothesis.",
+      "confidence": null,
+      "status": "supported",
+      "supportingExperimentIds": [],
+      "contradictingExperimentIds": [],
+      "evidenceReferences": [],
+      "unresolvedQuestions": []
+    },
+    {
+      "hypothesisId": "HYP-DUPLICATE",
+      "statement": "A duplicate synthetic hypothesis ID.",
+      "confidence": "low",
+      "status": "proposed",
+      "supportingExperimentIds": [],
+      "contradictingExperimentIds": [],
+      "evidenceReferences": [],
+      "unresolvedQuestions": []
+    }
+  ],
+  "conclusions": [],
+  "evidenceReferences": [],
+  "notes": [
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  ],
+  "tags": ["synthetic", "intentionally-invalid"]
+}

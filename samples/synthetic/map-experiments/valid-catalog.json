@@ -1,0 +1,108 @@
+{
+  "formatVersion": 1,
+  "catalogId": "synthetic-baseline-noise-v1",
+  "experiments": [
+    {
+      "formatVersion": 1,
+      "experimentId": "MAP-000A",
+      "title": "First minimal save",
+      "status": "planned",
+      "applicability": "requires-manual-editor-check",
+      "baselineExperimentId": null,
+      "comparisonExperimentIds": ["MAP-000B", "MAP-000C", "MAP-000D"],
+      "operation": {
+        "type": "create_baseline",
+        "entityType": "map",
+        "description": "Create the first minimal synthetic research baseline."
+      },
+      "artifacts": {
+        "result": {
+          "safeName": "MAP-000A.sg",
+          "role": "result"
+        }
+      },
+      "expectedDifference": "Initial baseline only.",
+      "observations": [],
+      "hypotheses": [],
+      "conclusions": [],
+      "evidenceReferences": [],
+      "notes": ["No original bytes or hashes are included."],
+      "tags": ["synthetic", "baseline-noise"]
+    },
+    {
+      "formatVersion": 1,
+      "experimentId": "MAP-000B",
+      "title": "Save without changes in the same session",
+      "status": "planned",
+      "applicability": "requires-manual-editor-check",
+      "baselineExperimentId": "MAP-000A",
+      "comparisonExperimentIds": ["MAP-000A"],
+      "operation": {
+        "type": "save_without_changes",
+        "entityType": "map",
+        "description": "Save again without an intentional edit."
+      },
+      "artifacts": {
+        "baseline": { "safeName": "MAP-000A.sg", "role": "baseline" },
+        "result": { "safeName": "MAP-000B.sg", "role": "result" }
+      },
+      "expectedDifference": "Measure same-session save noise.",
+      "observations": [],
+      "hypotheses": [],
+      "conclusions": [],
+      "evidenceReferences": [],
+      "notes": [],
+      "tags": ["synthetic", "baseline-noise"]
+    },
+    {
+      "formatVersion": 1,
+      "experimentId": "MAP-000C",
+      "title": "Reopen and save without changes",
+      "status": "planned",
+      "applicability": "requires-manual-editor-check",
+      "baselineExperimentId": "MAP-000A",
+      "comparisonExperimentIds": ["MAP-000B"],
+      "operation": {
+        "type": "reopen_and_save_without_changes",
+        "entityType": "map",
+        "description": "Close, reopen, and save without an intentional edit."
+      },
+      "artifacts": {
+        "baseline": { "safeName": "MAP-000A.sg", "role": "baseline" },
+        "result": { "safeName": "MAP-000C.sg", "role": "result" }
+      },
+      "expectedDifference": "Measure reopen-related save noise.",
+      "observations": [],
+      "hypotheses": [],
+      "conclusions": [],
+      "evidenceReferences": [],
+      "notes": [],
+      "tags": ["synthetic", "baseline-noise"]
+    },
+    {
+      "formatVersion": 1,
+      "experimentId": "MAP-000D",
+      "title": "Independently created equivalent map",
+      "status": "planned",
+      "applicability": "requires-manual-editor-check",
+      "baselineExperimentId": "MAP-000A",
+      "comparisonExperimentIds": ["MAP-000A"],
+      "operation": {
+        "type": "create_equivalent_map",
+        "entityType": "map",
+        "description": "Create a second visually equivalent map with the same controlled settings."
+      },
+      "artifacts": {
+        "baseline": { "safeName": "MAP-000A.sg", "role": "baseline" },
+        "result": { "safeName": "MAP-000D.sg", "role": "result" }
+      },
+      "expectedDifference": "Measure creation-order, generated-ID, and other nondeterministic differences.",
+      "observations": [],
+      "hypotheses": [],
+      "conclusions": [],
+      "evidenceReferences": [],
+      "notes": [],
+      "tags": ["synthetic", "baseline-noise"]
+    }
+  ]
+}
