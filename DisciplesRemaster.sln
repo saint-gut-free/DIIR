@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.FileInven
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.MapInspector", "tools\DisciplesRemaster.MapInspector\DisciplesRemaster.MapInspector.csproj", "{D6C2FB6D-19AC-4D95-9A16-BA312F10F2E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.Persistence.Tests", "tests\DisciplesRemaster.Persistence.Tests\DisciplesRemaster.Persistence.Tests.csproj", "{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -205,6 +207,18 @@ Global
 		{D6C2FB6D-19AC-4D95-9A16-BA312F10F2E0}.Release|x64.Build.0 = Release|Any CPU
 		{D6C2FB6D-19AC-4D95-9A16-BA312F10F2E0}.Release|x86.ActiveCfg = Release|Any CPU
 		{D6C2FB6D-19AC-4D95-9A16-BA312F10F2E0}.Release|x86.Build.0 = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|x64.Build.0 = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Debug|x86.Build.0 = Debug|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|x64.ActiveCfg = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|x64.Build.0 = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|x86.ActiveCfg = Release|Any CPU
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -223,5 +237,6 @@ Global
 		{C7C26CCB-994E-41FB-B7EE-17B8BC0367DA} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 		{AE0C745B-020A-4EB6-8DC1-EA15D085333B} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 		{D6C2FB6D-19AC-4D95-9A16-BA312F10F2E0} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "id": "synthetic-minimal",
+  "title": "Synthetic minimal scenario",
+  "description": "Project-owned sample with no original game data.",
+  "map": {
+    "width": 8,
+    "height": 6,
+    "defaultTerrain": "synthetic:plain",
+    "terrain": [
+      {
+        "x": 2,
+        "y": 1,
+        "terrain": "synthetic:forest"
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "terrain": "synthetic:water"
+      }
+    ]
+  }
+}
