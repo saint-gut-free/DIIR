@@ -169,6 +169,74 @@ public sealed class ScenarioEditorCommandTests : IDisposable
         Assert.Single(store.Load(outputPath).Scenario!.Map.Terrain);
     }
 
+    [Fact]
+    public void ObjectCommands_PlaceMoveAndRemoveObject()
+    {
+        string path = CreateFile("objects.json");
+
+        CommandResult place = Run("place-object", path, "landmark", "synthetic:landmark", "2", "3");
+        CommandResult move = Run("move-object", path, "landmark", "4", "5");
+
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, place.ExitCode);
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, move.ExitCode);
+        ScenarioObjectPlacement placement = Assert.Single(store.Load(path).Scenario!.Map.Objects);
+        Assert.Equal(4, placement.Position.X);
+        Assert.Equal(5, placement.Position.Y);
+
+        CommandResult remove = Run("remove-object", path, "landmark");
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, remove.ExitCode);
+        Assert.Empty(store.Load(path).Scenario!.Map.Objects);
+    }
+
+    [Fact]
+    public void PlaceObject_WithDuplicateId_DoesNotModifyInput()
+    {
+        string path = CreateFile("objects.json");
+        Assert.Equal(0, Run("place-object", path, "landmark", "synthetic:landmark", "2", "3").ExitCode);
+        byte[] before = File.ReadAllBytes(path);
+
+        CommandResult result = Run("place-object", path, "landmark", "synthetic:other", "1", "1");
+
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, result.ExitCode);
+        Assert.Equal(before, File.ReadAllBytes(path));
+    }
+
+    [Fact]
+    public void PlaceObject_OutsideMap_DoesNotModifyInput()
+    {
+        string path = CreateFile("objects.json");
+        byte[] before = File.ReadAllBytes(path);
+
+        CommandResult result = Run("place-object", path, "landmark", "synthetic:landmark", "8", "0");
+
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, result.ExitCode);
+        Assert.Equal(before, File.ReadAllBytes(path));
+    }
+
+    [Fact]
+    public void ObjectCommands_MissingObject_ReturnValidationError()
+    {
+        string path = CreateFile("objects.json");
+
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, Run("move-object", path, "missing", "1", "1").ExitCode);
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, Run("remove-object", path, "missing").ExitCode);
+    }
+
+    [Fact]
+    public void PlaceObject_WithOutput_PreservesInput()
+    {
+        string inputPath = CreateFile("objects.json");
+        string outputPath = Path.Combine(directory, "objects-output.json");
+        byte[] before = File.ReadAllBytes(inputPath);
+
+        CommandResult result = Run(
+            "place-object", inputPath, "landmark", "synthetic:landmark", "2", "3", "--output", outputPath);
+
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, result.ExitCode);
+        Assert.Equal(before, File.ReadAllBytes(inputPath));
+        Assert.Single(store.Load(outputPath).Scenario!.Map.Objects);
+    }
+
     [Theory]
     [InlineData()]
     [InlineData("unknown")]

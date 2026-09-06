@@ -137,6 +137,85 @@ public sealed class ScenarioValidationServiceTests
             first.Issues);
     }
 
+    [Fact]
+    public void Validate_WithValidObjects_IsValid()
+    {
+        ScenarioMapDefinition map = CreateScenario().Map with
+        {
+            Objects =
+            [
+                new ScenarioObjectPlacement("landmark-1", "synthetic:landmark", new GridPosition(2, 3)),
+                new ScenarioObjectPlacement("landmark-2", "synthetic:landmark", new GridPosition(2, 3)),
+            ],
+        };
+
+        ScenarioValidationResult result = service.Validate(CreateScenario() with { Map = map });
+
+        Assert.True(result.IsValid);
+    }
+
+    [Theory]
+    [InlineData("", ScenarioValidationCode.ObjectIdMissing)]
+    [InlineData("Invalid ID", ScenarioValidationCode.ObjectIdInvalid)]
+    public void Validate_WithInvalidObjectId_ReturnsExpectedCode(string id, ScenarioValidationCode code)
+    {
+        ScenarioMapDefinition map = CreateScenario().Map with
+        {
+            Objects = [new ScenarioObjectPlacement(id, "synthetic:landmark", new GridPosition(1, 1))],
+        };
+
+        ScenarioValidationResult result = service.Validate(CreateScenario() with { Map = map });
+
+        Assert.Contains(result.Issues, issue => issue.Code == code);
+    }
+
+    [Fact]
+    public void Validate_WithDuplicateObjectId_ReturnsError()
+    {
+        ScenarioMapDefinition map = CreateScenario().Map with
+        {
+            Objects =
+            [
+                new ScenarioObjectPlacement("same", "synthetic:a", new GridPosition(1, 1)),
+                new ScenarioObjectPlacement("same", "synthetic:b", new GridPosition(2, 2)),
+            ],
+        };
+
+        ScenarioValidationResult result = service.Validate(CreateScenario() with { Map = map });
+
+        Assert.Contains(result.Issues, issue => issue.Code == ScenarioValidationCode.DuplicateObjectId);
+    }
+
+    [Fact]
+    public void Validate_WithObjectOutsideMap_ReturnsError()
+    {
+        ScenarioMapDefinition map = CreateScenario().Map with
+        {
+            Objects = [new ScenarioObjectPlacement("outside", "synthetic:a", new GridPosition(8, 0))],
+        };
+
+        ScenarioValidationResult result = service.Validate(CreateScenario() with { Map = map });
+
+        Assert.Contains(result.Issues, issue => issue.Code == ScenarioValidationCode.ObjectPlacementOutsideMap);
+    }
+
+    [Fact]
+    public void RuntimeView_IndexesTerrainAndObjects()
+    {
+        ScenarioMapDefinition map = CreateScenario().Map with
+        {
+            Terrain = [new TerrainPlacement(new GridPosition(1, 2), "synthetic:forest")],
+            Objects = [new ScenarioObjectPlacement("landmark", "synthetic:landmark", new GridPosition(3, 4))],
+        };
+        ScenarioDefinition scenario = CreateScenario() with { Map = map };
+
+        ScenarioRuntimeView view = ScenarioRuntimeView.Create(scenario, service);
+
+        Assert.Equal("synthetic:plain", view.Terrain[new GridPosition(0, 0)]);
+        Assert.Equal("synthetic:forest", view.Terrain[new GridPosition(1, 2)]);
+        Assert.Equal("synthetic:landmark", view.ObjectsById["landmark"].Archetype);
+    }
+
     private static ScenarioDefinition CreateScenario() =>
         new(
             ScenarioFormatV1.Version,

@@ -66,6 +66,11 @@ public sealed class ScenarioJsonSerializer : IScenarioSerializer
                 return InvalidJson("Scenario terrain collection contains a null entry.");
             }
 
+            if (dto.Map?.Objects?.Any(placement => placement is null) == true)
+            {
+                return InvalidJson("Scenario object collection contains a null entry.");
+            }
+
             ScenarioDefinition scenario = FromDto(dto);
             ScenarioValidationResult validation = validationService.Validate(scenario);
             if (!validation.IsValid)
@@ -113,6 +118,14 @@ public sealed class ScenarioJsonSerializer : IScenarioSerializer
                         placement.Position.X,
                         placement.Position.Y,
                         placement.Terrain))
+                    .ToArray(),
+                scenario.Map.Objects
+                    .OrderBy(placement => placement.Id, StringComparer.Ordinal)
+                    .Select(placement => new ObjectPlacementDto(
+                        placement.Id,
+                        placement.Archetype,
+                        placement.Position.X,
+                        placement.Position.Y))
                     .ToArray()));
 
     private static ScenarioDefinition FromDto(ScenarioDto dto)
@@ -133,7 +146,15 @@ public sealed class ScenarioJsonSerializer : IScenarioSerializer
                         .Select(placement => new TerrainPlacement(
                             new GridPosition(placement!.X, placement.Y),
                             placement.Terrain ?? string.Empty))
-                        .ToArray()));
+                        .ToArray())
+                {
+                    Objects = (map.Objects ?? [])
+                        .Select(placement => new ScenarioObjectPlacement(
+                            placement!.Id ?? string.Empty,
+                            placement.Archetype ?? string.Empty,
+                            new GridPosition(placement.X, placement.Y)))
+                        .ToArray(),
+                });
     }
 
     private static ScenarioDeserializationResult InvalidJson(string message) =>
@@ -155,7 +176,10 @@ public sealed class ScenarioJsonSerializer : IScenarioSerializer
         int Width,
         int Height,
         string? DefaultTerrain,
-        IReadOnlyList<TerrainPlacementDto?>? Terrain);
+        IReadOnlyList<TerrainPlacementDto?>? Terrain,
+        IReadOnlyList<ObjectPlacementDto?>? Objects);
 
     private sealed record TerrainPlacementDto(int X, int Y, string? Terrain);
+
+    private sealed record ObjectPlacementDto(string? Id, string? Archetype, int X, int Y);
 }

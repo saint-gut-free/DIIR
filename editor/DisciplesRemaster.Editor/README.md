@@ -33,3 +33,18 @@ dotnet run --project editor/DisciplesRemaster.Editor -- paint-terrain `
 ```
 
 This command expresses behavior of the new project format only. It does not imply any terrain representation or coordinate convention in Disciples II. Original-game questions remain `TODO-D2-RESEARCH` items.
+
+## Manage inert object placements
+
+Object placements contain only a stable ID, a project content reference, and a zero-based position. They have no implied gameplay behavior.
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- place-object `
+  artifacts/scenarios/example.json landmark-1 project:landmark 5 4
+
+dotnet run --project editor/DisciplesRemaster.Editor -- move-object `
+  artifacts/scenarios/example.json landmark-1 6 4
+
+dotnet run --project editor/DisciplesRemaster.Editor -- remove-object `
+  artifacts/scenarios/example.json landmark-1
+```

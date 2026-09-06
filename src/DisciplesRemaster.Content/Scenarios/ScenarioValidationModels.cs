@@ -24,6 +24,11 @@ public enum ScenarioValidationCode
     TerrainPlacementOutsideMap,
     DuplicateTerrainPlacement,
     RedundantTerrainPlacement,
+    TooManyObjects,
+    ObjectIdMissing,
+    ObjectIdInvalid,
+    DuplicateObjectId,
+    ObjectPlacementOutsideMap,
 }
 
 public sealed record ScenarioValidationIssue(

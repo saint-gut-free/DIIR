@@ -13,4 +13,5 @@ public static class ScenarioFormatV1
     public const int MaximumTitleLength = 160;
     public const int MaximumDescriptionLength = 8192;
     public const int MaximumContentReferenceLength = 128;
+    public const int MaximumObjectCount = 100_000;
 }

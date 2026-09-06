@@ -33,6 +33,9 @@ public static class ScenarioEditorCommand
                     "validate" => Validate(arguments, store, output, error),
                     "summary" => Summary(arguments, store, output, error),
                     "paint-terrain" => PaintTerrain(arguments, store, output, error),
+                    "place-object" => PlaceObject(arguments, store, output, error),
+                    "move-object" => MoveObject(arguments, store, output, error),
+                    "remove-object" => RemoveObject(arguments, store, output, error),
                     _ => UsageFailure(error, "Unknown command."),
                 };
         }
@@ -144,7 +147,168 @@ public static class ScenarioEditorCommand
         output.WriteLine($"Map: {scenario.Map.Width} x {scenario.Map.Height}");
         output.WriteLine($"Default terrain: {scenario.Map.DefaultTerrain}");
         output.WriteLine($"Terrain overrides: {scenario.Map.Terrain.Count}");
+        output.WriteLine($"Objects: {scenario.Map.Objects.Count}");
         WriteWarnings(result.ValidationIssues, output);
+        return SuccessExitCode;
+    }
+
+    private static int PlaceObject(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (6 or 8) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            string.IsNullOrWhiteSpace(arguments[2]) ||
+            string.IsNullOrWhiteSpace(arguments[3]) ||
+            !int.TryParse(arguments[4], out int x) ||
+            !int.TryParse(arguments[5], out int y) ||
+            !TryParseOutputSuffix(arguments, 6, out string? outputPath))
+        {
+            return UsageFailure(error, "place-object requires <file> <id> <archetype> <x> <y>.");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioDefinition source = load.Scenario;
+        if (source.Map.Objects.Any(placement => string.Equals(placement.Id, arguments[2], StringComparison.Ordinal)))
+        {
+            error.WriteLine("An object with this ID already exists.");
+            error.WriteLine("Code: DuplicateObjectId");
+            return ValidationErrorExitCode;
+        }
+
+        var position = new GridPosition(x, y);
+        if (!Contains(source.Map, position))
+        {
+            error.WriteLine("Object position is outside the map.");
+            error.WriteLine("Code: ObjectPlacementOutsideMap");
+            return ValidationErrorExitCode;
+        }
+
+        List<ScenarioObjectPlacement> objects = source.Map.Objects.ToList();
+        objects.Add(new ScenarioObjectPlacement(arguments[2], arguments[3], position));
+        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
+        string destination = outputPath ?? arguments[1];
+        ScenarioSaveResult save = store.Save(destination, updated);
+        if (!save.IsSuccess)
+        {
+            return WriteSaveFailure(save, destination, error);
+        }
+
+        output.WriteLine("Scenario object placed.");
+        output.WriteLine($"File: {SafeName(destination)}");
+        output.WriteLine($"Object ID: {arguments[2]}");
+        output.WriteLine($"Archetype: {arguments[3]}");
+        output.WriteLine($"Position: {x}, {y}");
+        return SuccessExitCode;
+    }
+
+    private static int MoveObject(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (5 or 7) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            string.IsNullOrWhiteSpace(arguments[2]) ||
+            !int.TryParse(arguments[3], out int x) ||
+            !int.TryParse(arguments[4], out int y) ||
+            !TryParseOutputSuffix(arguments, 5, out string? outputPath))
+        {
+            return UsageFailure(error, "move-object requires <file> <id> <x> <y>.");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioDefinition source = load.Scenario;
+        ScenarioObjectPlacement? existing = source.Map.Objects.SingleOrDefault(
+            placement => string.Equals(placement.Id, arguments[2], StringComparison.Ordinal));
+        if (existing is null)
+        {
+            error.WriteLine("Scenario object was not found.");
+            error.WriteLine("Code: ObjectNotFound");
+            return ValidationErrorExitCode;
+        }
+
+        var position = new GridPosition(x, y);
+        if (!Contains(source.Map, position))
+        {
+            error.WriteLine("Object position is outside the map.");
+            error.WriteLine("Code: ObjectPlacementOutsideMap");
+            return ValidationErrorExitCode;
+        }
+
+        ScenarioObjectPlacement[] objects = source.Map.Objects
+            .Select(placement => ReferenceEquals(placement, existing) ? placement with { Position = position } : placement)
+            .ToArray();
+        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
+        string destination = outputPath ?? arguments[1];
+        ScenarioSaveResult save = store.Save(destination, updated);
+        if (!save.IsSuccess)
+        {
+            return WriteSaveFailure(save, destination, error);
+        }
+
+        output.WriteLine("Scenario object moved.");
+        output.WriteLine($"File: {SafeName(destination)}");
+        output.WriteLine($"Object ID: {arguments[2]}");
+        output.WriteLine($"Position: {x}, {y}");
+        return SuccessExitCode;
+    }
+
+    private static int RemoveObject(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (3 or 5) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            string.IsNullOrWhiteSpace(arguments[2]) ||
+            !TryParseOutputSuffix(arguments, 3, out string? outputPath))
+        {
+            return UsageFailure(error, "remove-object requires <file> <id>.");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioDefinition source = load.Scenario;
+        ScenarioObjectPlacement[] objects = source.Map.Objects
+            .Where(placement => !string.Equals(placement.Id, arguments[2], StringComparison.Ordinal))
+            .ToArray();
+        if (objects.Length == source.Map.Objects.Count)
+        {
+            error.WriteLine("Scenario object was not found.");
+            error.WriteLine("Code: ObjectNotFound");
+            return ValidationErrorExitCode;
+        }
+
+        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
+        string destination = outputPath ?? arguments[1];
+        ScenarioSaveResult save = store.Save(destination, updated);
+        if (!save.IsSuccess)
+        {
+            return WriteSaveFailure(save, destination, error);
+        }
+
+        output.WriteLine("Scenario object removed.");
+        output.WriteLine($"File: {SafeName(destination)}");
+        output.WriteLine($"Object ID: {arguments[2]}");
         return SuccessExitCode;
     }
 
@@ -308,6 +472,33 @@ public static class ScenarioEditorCommand
         return true;
     }
 
+    private static bool TryParseOutputSuffix(
+        IReadOnlyList<string> arguments,
+        int requiredCount,
+        out string? outputPath)
+    {
+        outputPath = null;
+        if (arguments.Count == requiredCount)
+        {
+            return true;
+        }
+
+        if (arguments.Count != requiredCount + 2 ||
+            !string.Equals(arguments[requiredCount], "--output", StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(arguments[requiredCount + 1]))
+        {
+            return false;
+        }
+
+        outputPath = arguments[requiredCount + 1];
+        return true;
+    }
+
+    private static bool Contains(ScenarioMapDefinition map, GridPosition position) =>
+        map.Width > 0 &&
+        map.Height > 0 &&
+        new GridSize(map.Width, map.Height).Contains(position);
+
     private static int WriteLoadFailure(ScenarioLoadResult result, string path, TextWriter error)
     {
         error.WriteLine("Native scenario could not be loaded.");
@@ -377,6 +568,9 @@ public static class ScenarioEditorCommand
         writer.WriteLine("  validate <file>");
         writer.WriteLine("  summary <file>");
         writer.WriteLine("  paint-terrain <file> <x> <y> <namespace:name> [--output <file>]");
+        writer.WriteLine("  place-object <file> <id> <archetype> <x> <y> [--output <file>]");
+        writer.WriteLine("  move-object <file> <id> <x> <y> [--output <file>]");
+        writer.WriteLine("  remove-object <file> <id> [--output <file>]");
     }
 
     private sealed class CreateOptions

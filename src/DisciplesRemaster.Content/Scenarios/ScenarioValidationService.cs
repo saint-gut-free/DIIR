@@ -125,6 +125,55 @@ public sealed partial class ScenarioValidationService : IScenarioValidationServi
                 issues.Add(Warning(ScenarioValidationCode.RedundantTerrainPlacement, path, "Terrain override equals the map default."));
             }
         }
+
+        ValidateObjects(map.Objects, size, issues);
+    }
+
+    private static void ValidateObjects(
+        IReadOnlyList<ScenarioObjectPlacement>? objects,
+        GridSize? size,
+        ICollection<ScenarioValidationIssue> issues)
+    {
+        IReadOnlyList<ScenarioObjectPlacement> placements = objects ?? [];
+        if (placements.Count > ScenarioFormatV1.MaximumObjectCount)
+        {
+            issues.Add(Error(ScenarioValidationCode.TooManyObjects, "map.objects", "The map contains too many object placements."));
+        }
+
+        HashSet<string> ids = new(StringComparer.Ordinal);
+        for (int index = 0; index < placements.Count; index++)
+        {
+            ScenarioObjectPlacement? placement = placements[index];
+            string path = $"map.objects[{index}]";
+            if (placement is null)
+            {
+                issues.Add(Error(ScenarioValidationCode.ObjectIdMissing, path, "Object placement is missing."));
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(placement.Id))
+            {
+                issues.Add(Error(ScenarioValidationCode.ObjectIdMissing, $"{path}.id", "Object ID is required."));
+            }
+            else
+            {
+                if (placement.Id.Length > ScenarioFormatV1.MaximumIdLength || !ScenarioIdPattern().IsMatch(placement.Id))
+                {
+                    issues.Add(Error(ScenarioValidationCode.ObjectIdInvalid, $"{path}.id", "Object ID is invalid."));
+                }
+
+                if (!ids.Add(placement.Id))
+                {
+                    issues.Add(Error(ScenarioValidationCode.DuplicateObjectId, $"{path}.id", "Object IDs must be unique."));
+                }
+            }
+
+            ValidateContentReference(placement.Archetype, $"{path}.archetype", false, issues);
+            if (size is not null && !size.Value.Contains(placement.Position))
+            {
+                issues.Add(Error(ScenarioValidationCode.ObjectPlacementOutsideMap, $"{path}.position", "Object position is outside the map."));
+            }
+        }
     }
 
     private static void ValidateContentReference(

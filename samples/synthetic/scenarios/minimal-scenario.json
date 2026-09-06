@@ -18,6 +18,14 @@
         "y": 1,
         "terrain": "synthetic:water"
       }
+    ],
+    "objects": [
+      {
+        "id": "landmark-1",
+        "archetype": "synthetic:landmark",
+        "x": 4,
+        "y": 3
+      }
     ]
   }
 }

@@ -135,6 +135,54 @@ public sealed class ScenarioJsonSerializerTests
         Assert.Equal(ScenarioPersistenceErrorCode.InvalidJson, result.ErrorCode);
     }
 
+    [Fact]
+    public void Serialize_ObjectOrder_IsDeterministic()
+    {
+        ScenarioObjectPlacement first = new("z-object", "synthetic:z", new GridPosition(1, 1));
+        ScenarioObjectPlacement second = new("a-object", "synthetic:a", new GridPosition(2, 2));
+        ScenarioDefinition left = CreateScenario() with
+        {
+            Map = CreateScenario().Map with { Objects = [first, second] },
+        };
+        ScenarioDefinition right = CreateScenario() with
+        {
+            Map = CreateScenario().Map with { Objects = [second, first] },
+        };
+
+        byte[] leftData = serializer.Serialize(left).Data!;
+        byte[] rightData = serializer.Serialize(right).Data!;
+
+        Assert.Equal(leftData, rightData);
+        Assert.True(
+            Encoding.UTF8.GetString(leftData).IndexOf("a-object", StringComparison.Ordinal) <
+            Encoding.UTF8.GetString(leftData).IndexOf("z-object", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Deserialize_NullObjectEntry_ReturnsInvalidJsonWithoutThrowing()
+    {
+        const string json = """
+            {
+              "formatVersion": 1,
+              "id": "synthetic-scenario",
+              "title": "Synthetic",
+              "description": null,
+              "map": {
+                "width": 4,
+                "height": 4,
+                "defaultTerrain": "synthetic:plain",
+                "terrain": [],
+                "objects": [null]
+              }
+            }
+            """;
+
+        ScenarioDeserializationResult result = serializer.Deserialize(Encoding.UTF8.GetBytes(json));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ScenarioPersistenceErrorCode.InvalidJson, result.ErrorCode);
+    }
+
     private static ScenarioDefinition CreateScenario(IReadOnlyList<TerrainPlacement>? terrain = null) =>
         new(
             ScenarioFormatV1.Version,
