@@ -16,6 +16,8 @@
 
 Первый milestone — воспроизводимая, протестированная основа доменной модели и спецификаций без интеграции с оригинальными материалами.
 
+Фактическая готовность и следующие milestones перечислены в [дорожной карте](docs/architecture/roadmap.md).
+
 ## Собственный формат сценария
 
 Минимальный синтетический пример находится в `samples/synthetic/scenarios/minimal-scenario.json`. Он создан проектом и не содержит оригинальных данных.
@@ -35,6 +37,12 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 dotnet restore
 dotnet build
 dotnet test
+```
+
+Полная локальная проверка одной командой:
+
+```powershell
+./scripts/verify.ps1
 ```
 
 ## Структура

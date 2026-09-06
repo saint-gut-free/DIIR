@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.Editor.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.Game.Tests", "tests\DisciplesRemaster.Game.Tests\DisciplesRemaster.Game.Tests.csproj", "{3D2B86E3-CFE8-4346-90A5-16BBBBD40D8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisciplesRemaster.Architecture.Tests", "tests\DisciplesRemaster.Architecture.Tests\DisciplesRemaster.Architecture.Tests.csproj", "{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -247,6 +249,18 @@ Global
 		{3D2B86E3-CFE8-4346-90A5-16BBBBD40D8D}.Release|x64.Build.0 = Release|Any CPU
 		{3D2B86E3-CFE8-4346-90A5-16BBBBD40D8D}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D2B86E3-CFE8-4346-90A5-16BBBBD40D8D}.Release|x86.Build.0 = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|x64.Build.0 = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Debug|x86.Build.0 = Debug|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|x64.ActiveCfg = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|x64.Build.0 = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|x86.ActiveCfg = Release|Any CPU
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -268,5 +282,6 @@ Global
 		{C54DADEA-5F72-4E1A-B46E-3A9FD0493869} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{B23AF082-AB59-49F0-8E18-8C0A587835C9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{3D2B86E3-CFE8-4346-90A5-16BBBBD40D8D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{A0DEADA9-B32E-4B40-944D-56B48D7B18D9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

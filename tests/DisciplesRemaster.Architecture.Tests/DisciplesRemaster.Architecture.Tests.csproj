@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\editor\DisciplesRemaster.Editor\DisciplesRemaster.Editor.csproj" />
+    <ProjectReference Include="..\..\game\DisciplesRemaster.Godot\DisciplesRemaster.Godot.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Content\DisciplesRemaster.Content.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Core\DisciplesRemaster.Core.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.OriginalGame\DisciplesRemaster.OriginalGame.csproj" />
+    <ProjectReference Include="..\..\src\DisciplesRemaster.Persistence\DisciplesRemaster.Persistence.csproj" />
+    <ProjectReference Include="..\..\tools\DisciplesRemaster.BinaryDiff\DisciplesRemaster.BinaryDiff.csproj" />
+    <ProjectReference Include="..\..\tools\DisciplesRemaster.FileInventory\DisciplesRemaster.FileInventory.csproj" />
+    <ProjectReference Include="..\..\tools\DisciplesRemaster.MapInspector\DisciplesRemaster.MapInspector.csproj" />
+  </ItemGroup>
+
+</Project>
