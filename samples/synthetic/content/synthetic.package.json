@@ -1,0 +1,25 @@
+{
+  "formatVersion": 1,
+  "id": "synthetic",
+  "displayName": "Synthetic project content",
+  "terrains": [
+    {
+      "id": "forest",
+      "displayName": "Forest"
+    },
+    {
+      "id": "plain",
+      "displayName": "Plain"
+    },
+    {
+      "id": "water",
+      "displayName": "Water"
+    }
+  ],
+  "objectArchetypes": [
+    {
+      "id": "landmark",
+      "displayName": "Landmark"
+    }
+  ]
+}

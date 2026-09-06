@@ -48,3 +48,17 @@ dotnet run --project editor/DisciplesRemaster.Editor -- move-object `
 dotnet run --project editor/DisciplesRemaster.Editor -- remove-object `
   artifacts/scenarios/example.json landmark-1
 ```
+
+## Validate content packages and references
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- `
+  validate-content samples/synthetic/content/synthetic.package.json
+
+dotnet run --project editor/DisciplesRemaster.Editor -- `
+  validate-scenario-content `
+  samples/synthetic/scenarios/minimal-scenario.json `
+  samples/synthetic/content/synthetic.package.json
+```
+
+Validation is typed: a terrain reference cannot resolve to an object archetype with the same local ID.
