@@ -19,6 +19,7 @@
 - структурная и cross-content валидация;
 - детерминированная атомарная persistence;
 - headless create/validate/summary/edit workflow;
+- bounded engine-neutral undo/redo session для terrain и inert object edits;
 - deterministic scene projection для будущего Godot host.
 
 ### Engine primitives
