@@ -22,6 +22,6 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Restore, build, test, and audit
+      - name: Restore, format-check, release-build, test, and audit
         shell: pwsh
         run: ./scripts/verify.ps1
