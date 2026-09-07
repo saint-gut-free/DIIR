@@ -30,6 +30,7 @@
 - минимальные project-owned round-robin turn и unweighted movement-budget primitives;
 - typed content packages и catalog.
 - validated scenario bundle loading: сценарий попадает во внешний game-адаптер только после проверки всех content references.
+- synthetic end-to-end tests загружают tracked scenario, content package и runtime checkpoint через production persistence API.
 
 ## Следующие milestones
 

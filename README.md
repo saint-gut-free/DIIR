@@ -29,6 +29,8 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 
 Создание и редактирование собственного документа описаны в `editor/DisciplesRemaster.Editor/README.md`. Этот формат не является `.sg`; будущий импорт оригинальных сценариев должен преобразовывать подтверждённые данные в независимую модель.
 
+Синтетические scenario, content package и runtime checkpoint проходят end-to-end тест через production persistence API. Минимальный checkpoint находится в `samples/synthetic/sessions/minimal-session.json`; его независимые правила описаны в [спецификации turn/movement](docs/specifications/project-owned-turn-and-movement-v1.md) и [формате checkpoint v1](docs/specifications/game-session-checkpoint-v1.md). Эти правила являются собственным дизайном проекта, а не заявлением о поведении оригинальной игры.
+
 ## Требования и команды
 
 Требуется .NET SDK 10.0.302 или совместимый SDK 10.x и Git. Godot на текущем этапе не требуется.
