@@ -1,5 +1,7 @@
 # Game session checkpoint v1
 
+Ordered project-owned runtime commands are specified separately in [game session action log v1](game-session-action-log-v1.md).
+
 This is a deterministic project-owned runtime checkpoint format. It is not an original-game `.sav` format and is not intended to preserve or imitate original save data.
 
 ## JSON structure

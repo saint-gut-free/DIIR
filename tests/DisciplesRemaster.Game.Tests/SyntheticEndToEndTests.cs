@@ -1,5 +1,9 @@
 using DisciplesRemaster.Content.Catalog;
 using DisciplesRemaster.Content.Scenarios;
+using DisciplesRemaster.Core.Geometry;
+using DisciplesRemaster.Core.Movement;
+using DisciplesRemaster.Core.Navigation;
+using DisciplesRemaster.Core.Sessions;
 using DisciplesRemaster.Godot;
 using DisciplesRemaster.Persistence.Content;
 using DisciplesRemaster.Persistence.Projects;
@@ -77,11 +81,36 @@ public sealed class SyntheticEndToEndTests
     }
 
     [Fact]
+    public void TrackedActionLog_ReplaysDeterministicallyThroughProductionStores()
+    {
+        var sessionStore = new GameSessionFileStore(new GameSessionJsonSerializer());
+        var actionStore = new GameSessionActionLogFileStore(new GameSessionActionLogJsonSerializer());
+        GameSessionLoadResult session = sessionStore.Load(Sample("sessions", "minimal-session.json"));
+        GameSessionActionLogLoadResult actions = actionStore.Load(Sample("sessions", "minimal-actions.json"));
+        var processor = new GameSessionActionProcessor(
+            new GameSessionService(new MovementPlanner(new GridPathfinder())));
+
+        GameSessionActionBatchResult result = processor.Apply(
+            session.Session!,
+            actions.Log!.Actions,
+            OrthogonalGridTopology.Instance,
+            _ => true);
+
+        Assert.True(session.IsSuccess);
+        Assert.True(actions.IsSuccess);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.AppliedActions);
+        Assert.Equal("red", result.Session!.Turn.ActiveParticipantId);
+        Assert.Equal(new GridPosition(2, 1), result.Session.Actors["blue-actor"].Position);
+        Assert.Equal(new GridPosition(5, 4), result.Session.Actors["red-actor"].Position);
+    }
+
+    [Fact]
     public void TrackedRuntimeSamples_AreProjectOwnedJsonOnly()
     {
         string[] files = Directory.GetFiles(SamplesDirectory, "*", SearchOption.AllDirectories);
 
-        Assert.Equal(4, files.Length);
+        Assert.Equal(5, files.Length);
         Assert.All(files, path => Assert.EndsWith(".json", path, StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(files, path =>
             Path.GetExtension(path) is ".sg" or ".sav" or ".exe" or ".dll");

@@ -41,6 +41,14 @@ dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/syn
 
 Синтетические scenario, content package и runtime checkpoint проходят end-to-end тест через production persistence API. Минимальный checkpoint находится в `samples/synthetic/sessions/minimal-session.json`; его независимые правила описаны в [спецификации turn/movement](docs/specifications/project-owned-turn-and-movement-v1.md) и [формате checkpoint v1](docs/specifications/game-session-checkpoint-v1.md). Эти правила являются собственным дизайном проекта, а не заявлением о поведении оригинальной игры.
 
+Bounded action log позволяет детерминированно и атомарно воспроизвести уже определённые project-owned runtime actions:
+
+```powershell
+dotnet run --project game/DisciplesRemaster.Godot -- replay-open-grid samples/synthetic/sessions/minimal-session.json samples/synthetic/sessions/minimal-actions.json --output artifacts/runtime/replayed.session.json
+```
+
+`open-grid` явно обозначает тестовую политику проходимости; она не считается механикой Disciples II.
+
 ## Требования и команды
 
 Требуется .NET SDK 10.0.302 или совместимый SDK 10.x и Git. Godot на текущем этапе не требуется.

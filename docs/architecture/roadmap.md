@@ -33,6 +33,7 @@
 - portable native project manifest связывает scenario, typed content packages и optional runtime checkpoint относительными путями и проверяет bundle целиком.
 - synthetic end-to-end tests загружают tracked scenario, content package и runtime checkpoint через production persistence API.
 - runnable headless host позволяет валидировать, просматривать и изменять runtime checkpoint до подключения Godot .NET.
+- strict bounded action log атомарно воспроизводит существующие project-owned advance-turn и explicit open-grid move действия.
 
 ## Следующие milestones
 
@@ -42,7 +43,7 @@
 
 ### M3 — Independent gameplay vertical slice
 
-Минимальные независимые правила round-robin turn sequencing, ownership runtime-акторов и unweighted movement budget специфицированы и протестированы как immutable headless session. Следующими нужно явно спроектировать actions, interaction и переходы состояния мира, не смешивая их с native scenario v1. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
+Минимальные независимые правила round-robin turn sequencing, ownership runtime-акторов и unweighted movement budget специфицированы и протестированы как immutable headless session. Bounded action batch отделяет команды от состояния и обеспечивает атомарный deterministic replay. Следующими нужно явно спроектировать interaction и переходы состояния мира, не смешивая их с native scenario v1. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
 
 ### M4 — Graphical scenario editor
 

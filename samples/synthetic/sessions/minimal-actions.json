@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "actions": [
+    {
+      "sequence": 1,
+      "kind": "moveActor",
+      "actorId": "blue-actor",
+      "x": 2,
+      "y": 1
+    },
+    {
+      "sequence": 2,
+      "kind": "advanceTurn",
+      "actorId": null,
+      "x": null,
+      "y": null
+    },
+    {
+      "sequence": 3,
+      "kind": "moveActor",
+      "actorId": "red-actor",
+      "x": 5,
+      "y": 4
+    }
+  ]
+}
