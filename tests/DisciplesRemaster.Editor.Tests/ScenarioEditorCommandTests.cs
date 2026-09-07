@@ -116,6 +116,53 @@ public sealed class ScenarioEditorCommandTests : IDisposable
     }
 
     [Fact]
+    public void MetadataAndResizeCommands_UpdateNativeScenario()
+    {
+        string path = CreateFile("metadata.json");
+
+        Assert.Equal(0, Run("set-title", path, "Updated title").ExitCode);
+        Assert.Equal(0, Run("set-default-terrain", path, "synthetic:water").ExitCode);
+        Assert.Equal(0, Run("resize-map", path, "10", "9").ExitCode);
+
+        ScenarioDefinition scenario = store.Load(path).Scenario!;
+        Assert.Equal("Updated title", scenario.Title);
+        Assert.Equal("synthetic:water", scenario.Map.DefaultTerrain);
+        Assert.Equal(10, scenario.Map.Width);
+        Assert.Equal(9, scenario.Map.Height);
+    }
+
+    [Fact]
+    public void MetadataCommand_WithOutput_PreservesInput()
+    {
+        string inputPath = CreateFile("metadata-input.json");
+        string outputPath = Path.Combine(directory, "metadata-output.json");
+        byte[] before = File.ReadAllBytes(inputPath);
+
+        CommandResult result = Run("set-title", inputPath, "Output title", "--output", outputPath);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(before, File.ReadAllBytes(inputPath));
+        Assert.Equal("Output title", store.Load(outputPath).Scenario!.Title);
+    }
+
+    [Fact]
+    public void InvalidMetadataOrResize_DoesNotModifyInput()
+    {
+        string path = CreateFile("invalid-edit.json");
+        Assert.Equal(0, Run("place-object", path, "edge", "synthetic:marker", "7", "5").ExitCode);
+        byte[] before = File.ReadAllBytes(path);
+
+        CommandResult invalidTerrain = Run("set-default-terrain", path, "invalid-reference");
+        CommandResult clippingResize = Run("resize-map", path, "4", "4");
+
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, invalidTerrain.ExitCode);
+        Assert.Contains(nameof(ScenarioValidationCode.ContentReferenceInvalid), invalidTerrain.Error, StringComparison.Ordinal);
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, clippingResize.ExitCode);
+        Assert.Contains(nameof(ScenarioValidationCode.ObjectPlacementOutsideMap), clippingResize.Error, StringComparison.Ordinal);
+        Assert.Equal(before, File.ReadAllBytes(path));
+    }
+
+    [Fact]
     public void PaintTerrain_AddsAndReplacesOverride()
     {
         string path = CreateFile("paint.json");
@@ -242,6 +289,9 @@ public sealed class ScenarioEditorCommandTests : IDisposable
     [InlineData("unknown")]
     [InlineData("create", "file.json")]
     [InlineData("paint-terrain", "file.json", "x", "0", "synthetic:plain")]
+    [InlineData("set-title", "file.json")]
+    [InlineData("set-default-terrain", "file.json", "")]
+    [InlineData("resize-map", "file.json", "x", "4")]
     public void InvalidArguments_ReturnUsageError(params string[] arguments)
     {
         CommandResult result = Run(arguments);

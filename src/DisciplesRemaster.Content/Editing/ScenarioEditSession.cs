@@ -61,6 +61,52 @@ public sealed class ScenarioEditSession
             null);
     }
 
+    public ScenarioEditResult SetTitle(string title)
+    {
+        if (string.Equals(Current.Title, title, StringComparison.Ordinal))
+        {
+            return NoChange();
+        }
+
+        return Apply(Current with { Title = title });
+    }
+
+    public ScenarioEditResult SetDefaultTerrain(string terrainReference)
+    {
+        TerrainPlacement[] retainedOverrides = Current.Map.Terrain
+            .Where(placement => !string.Equals(placement.Terrain, terrainReference, StringComparison.Ordinal))
+            .ToArray();
+        if (string.Equals(Current.Map.DefaultTerrain, terrainReference, StringComparison.Ordinal) &&
+            retainedOverrides.Length == Current.Map.Terrain.Count)
+        {
+            return NoChange();
+        }
+
+        return Apply(Current with
+        {
+            Map = Current.Map with
+            {
+                DefaultTerrain = terrainReference,
+                Terrain = retainedOverrides,
+            },
+        });
+    }
+
+    public ScenarioEditResult ResizeMap(int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return Failure(ScenarioEditStatus.InvalidDimensions, "Map dimensions must be positive.");
+        }
+
+        if (Current.Map.Width == width && Current.Map.Height == height)
+        {
+            return NoChange();
+        }
+
+        return Apply(Current with { Map = Current.Map with { Width = width, Height = height } });
+    }
+
     public ScenarioEditResult PaintTerrain(GridPosition position, string terrainReference)
     {
         if (!Contains(position))

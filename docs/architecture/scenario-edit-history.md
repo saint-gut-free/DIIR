@@ -5,6 +5,8 @@
 Supported v1 operations are:
 
 - paint or clear a sparse terrain override;
+- update title and default terrain;
+- resize the map without silently clipping placements;
 - place an inert object;
 - move an inert object;
 - remove an inert object;

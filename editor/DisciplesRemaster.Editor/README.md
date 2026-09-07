@@ -27,6 +27,16 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary artifacts/scenar
 
 Coordinates are zero-based. Omitting `--output` updates the native JSON document atomically. Painting the default terrain removes an existing override and keeps the representation canonical.
 
+## Update scenario metadata and size
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- set-title artifacts/scenarios/example.json "Updated title"
+dotnet run --project editor/DisciplesRemaster.Editor -- set-default-terrain artifacts/scenarios/example.json synthetic:water
+dotnet run --project editor/DisciplesRemaster.Editor -- resize-map artifacts/scenarios/example.json 48 32
+```
+
+Changing the default removes overrides that would become redundant. Resizing is rejected if any existing terrain override or object would fall outside the new bounds. Each command supports `--output <file>` to preserve its input.
+
 ```powershell
 dotnet run --project editor/DisciplesRemaster.Editor -- paint-terrain `
   artifacts/scenarios/example.json 3 2 project:forest

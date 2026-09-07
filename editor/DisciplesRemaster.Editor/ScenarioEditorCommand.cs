@@ -1,3 +1,4 @@
+using DisciplesRemaster.Content.Editing;
 using DisciplesRemaster.Content.Scenarios;
 using DisciplesRemaster.Core.Geometry;
 using DisciplesRemaster.Persistence.Scenarios;
@@ -32,6 +33,9 @@ public static class ScenarioEditorCommand
                     "create" => Create(arguments, store, output, error),
                     "validate" => Validate(arguments, store, output, error),
                     "summary" => Summary(arguments, store, output, error),
+                    "set-title" => SetTitle(arguments, store, output, error),
+                    "set-default-terrain" => SetDefaultTerrain(arguments, store, output, error),
+                    "resize-map" => ResizeMap(arguments, store, output, error),
                     "paint-terrain" => PaintTerrain(arguments, store, output, error),
                     "place-object" => PlaceObject(arguments, store, output, error),
                     "move-object" => MoveObject(arguments, store, output, error),
@@ -150,6 +154,97 @@ public static class ScenarioEditorCommand
         output.WriteLine($"Objects: {scenario.Map.Objects.Count}");
         WriteWarnings(result.ValidationIssues, output);
         return SuccessExitCode;
+    }
+
+    private static int SetTitle(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (3 or 5) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            string.IsNullOrWhiteSpace(arguments[2]) ||
+            !TryParseOutputSuffix(arguments, 3, out string? outputPath))
+        {
+            return UsageFailure(error, "set-title requires <file> <title> [--output <file>].");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).SetTitle(arguments[2]);
+        return SaveEdit(
+            store,
+            edit,
+            outputPath ?? arguments[1],
+            "Scenario title updated.",
+            output,
+            error);
+    }
+
+    private static int SetDefaultTerrain(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (3 or 5) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            string.IsNullOrWhiteSpace(arguments[2]) ||
+            !TryParseOutputSuffix(arguments, 3, out string? outputPath))
+        {
+            return UsageFailure(error, "set-default-terrain requires <file> <content-reference> [--output <file>].");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).SetDefaultTerrain(arguments[2]);
+        return SaveEdit(
+            store,
+            edit,
+            outputPath ?? arguments[1],
+            "Default terrain updated.",
+            output,
+            error);
+    }
+
+    private static int ResizeMap(
+        IReadOnlyList<string> arguments,
+        IScenarioFileStore store,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (arguments.Count is not (4 or 6) ||
+            string.IsNullOrWhiteSpace(arguments[1]) ||
+            !int.TryParse(arguments[2], out int width) ||
+            !int.TryParse(arguments[3], out int height) ||
+            !TryParseOutputSuffix(arguments, 4, out string? outputPath))
+        {
+            return UsageFailure(error, "resize-map requires <file> <width> <height> [--output <file>].");
+        }
+
+        ScenarioLoadResult load = store.Load(arguments[1]);
+        if (!load.IsSuccess || load.Scenario is null)
+        {
+            return WriteLoadFailure(load, arguments[1], error);
+        }
+
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).ResizeMap(width, height);
+        return SaveEdit(
+            store,
+            edit,
+            outputPath ?? arguments[1],
+            "Scenario map resized.",
+            output,
+            error);
     }
 
     private static int PlaceObject(
@@ -508,6 +603,38 @@ public static class ScenarioEditorCommand
         return ExitCodeFor(result.ErrorCode);
     }
 
+    private static ScenarioEditSession CreateEditSession(ScenarioDefinition scenario) =>
+        ScenarioEditSession.Create(scenario, new ScenarioValidationService()).Session ??
+        throw new InvalidOperationException("Loaded scenario did not produce an edit session.");
+
+    private static int SaveEdit(
+        IScenarioFileStore store,
+        ScenarioEditResult edit,
+        string destination,
+        string successMessage,
+        TextWriter output,
+        TextWriter error)
+    {
+        if (!edit.IsSuccess)
+        {
+            error.WriteLine(edit.Message ?? "Scenario edit was rejected.");
+            error.WriteLine($"Code: {edit.Status}");
+            WriteIssues(edit.ValidationIssues, error);
+            return ValidationErrorExitCode;
+        }
+
+        ScenarioSaveResult save = store.Save(destination, edit.Scenario);
+        if (!save.IsSuccess)
+        {
+            return WriteSaveFailure(save, destination, error);
+        }
+
+        output.WriteLine(successMessage);
+        output.WriteLine($"File: {SafeName(destination)}");
+        WriteWarnings(save.ValidationIssues, output);
+        return SuccessExitCode;
+    }
+
     private static int WriteSaveFailure(ScenarioSaveResult result, string path, TextWriter error)
     {
         error.WriteLine("Native scenario could not be saved.");
@@ -567,6 +694,9 @@ public static class ScenarioEditorCommand
         writer.WriteLine("  create <file> --id <id> --title <title> --width <n> --height <n> --default-terrain <namespace:name> [--description <text>] [--force]");
         writer.WriteLine("  validate <file>");
         writer.WriteLine("  summary <file>");
+        writer.WriteLine("  set-title <file> <title> [--output <file>]");
+        writer.WriteLine("  set-default-terrain <file> <namespace:name> [--output <file>]");
+        writer.WriteLine("  resize-map <file> <width> <height> [--output <file>]");
         writer.WriteLine("  paint-terrain <file> <x> <y> <namespace:name> [--output <file>]");
         writer.WriteLine("  place-object <file> <id> <archetype> <x> <y> [--output <file>]");
         writer.WriteLine("  move-object <file> <id> <x> <y> [--output <file>]");

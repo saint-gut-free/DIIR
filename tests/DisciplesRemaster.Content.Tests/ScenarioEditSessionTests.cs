@@ -49,6 +49,95 @@ public sealed class ScenarioEditSessionTests
     }
 
     [Fact]
+    public void MetadataAndMapEdits_AreValidatedAndUndoable()
+    {
+        ScenarioEditSession session = CreateSession();
+
+        Assert.True(session.SetTitle("Updated title").IsSuccess);
+        Assert.True(session.SetDefaultTerrain("synthetic:water").IsSuccess);
+        Assert.True(session.ResizeMap(10, 9).IsSuccess);
+
+        Assert.Equal("Updated title", session.Current.Title);
+        Assert.Equal("synthetic:water", session.Current.Map.DefaultTerrain);
+        Assert.Equal(10, session.Current.Map.Width);
+        Assert.Equal(9, session.Current.Map.Height);
+        Assert.Equal("synthetic:water", session.Undo().Scenario.Map.DefaultTerrain);
+        Assert.Equal("synthetic:plain", session.Undo().Scenario.Map.DefaultTerrain);
+        Assert.Equal("Synthetic", session.Undo().Scenario.Title);
+    }
+
+    [Fact]
+    public void SetDefaultTerrain_RemovesNowRedundantOverrides()
+    {
+        ScenarioEditSession session = CreateSession();
+        session.PaintTerrain(new GridPosition(1, 1), "synthetic:water");
+        session.PaintTerrain(new GridPosition(2, 2), "synthetic:forest");
+
+        ScenarioEditResult result = session.SetDefaultTerrain("synthetic:water");
+
+        TerrainPlacement remaining = Assert.Single(result.Scenario.Map.Terrain);
+        Assert.Equal("synthetic:forest", remaining.Terrain);
+    }
+
+    [Fact]
+    public void SetDefaultTerrain_SameValue_CanonicalizesExistingRedundantOverride()
+    {
+        ScenarioDefinition scenario = CreateScenario() with
+        {
+            Map = CreateScenario().Map with
+            {
+                Terrain = [new TerrainPlacement(new GridPosition(1, 1), "synthetic:plain")],
+            },
+        };
+        ScenarioEditSession session = ScenarioEditSession.Create(scenario, validation).Session!;
+
+        ScenarioEditResult result = session.SetDefaultTerrain("synthetic:plain");
+
+        Assert.Equal(ScenarioEditStatus.Applied, result.Status);
+        Assert.Empty(result.Scenario.Map.Terrain);
+    }
+
+    [Fact]
+    public void ResizeMap_ThatWouldExcludePlacements_IsRejectedWithoutHistory()
+    {
+        ScenarioEditSession session = CreateSession();
+        session.PlaceObject(new ScenarioObjectPlacement("marker", "synthetic:marker", new GridPosition(7, 5)));
+        int undoCount = session.UndoCount;
+
+        ScenarioEditResult result = session.ResizeMap(4, 4);
+
+        Assert.Equal(ScenarioEditStatus.ValidationFailed, result.Status);
+        Assert.Contains(result.ValidationIssues, issue => issue.Code == ScenarioValidationCode.ObjectPlacementOutsideMap);
+        Assert.Equal(8, session.Current.Map.Width);
+        Assert.Equal(undoCount, session.UndoCount);
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(1, 0)]
+    [InlineData(-1, 2)]
+    public void ResizeMap_InvalidDimensions_ReturnsStructuredFailure(int width, int height)
+    {
+        ScenarioEditSession session = CreateSession();
+
+        ScenarioEditResult result = session.ResizeMap(width, height);
+
+        Assert.Equal(ScenarioEditStatus.InvalidDimensions, result.Status);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void MetadataNoOps_DoNotCreateHistory()
+    {
+        ScenarioEditSession session = CreateSession();
+
+        Assert.Equal(ScenarioEditStatus.NoChange, session.SetTitle("Synthetic").Status);
+        Assert.Equal(ScenarioEditStatus.NoChange, session.SetDefaultTerrain("synthetic:plain").Status);
+        Assert.Equal(ScenarioEditStatus.NoChange, session.ResizeMap(8, 6).Status);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
     public void PaintTerrain_DefaultValue_RemovesOverrideAndCanUndo()
     {
         ScenarioEditSession session = CreateSession();

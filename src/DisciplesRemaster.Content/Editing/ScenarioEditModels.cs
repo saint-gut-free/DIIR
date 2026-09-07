@@ -15,6 +15,7 @@ public enum ScenarioEditStatus
     Undone,
     Redone,
     InvalidPosition,
+    InvalidDimensions,
     DuplicateObjectId,
     ObjectNotFound,
     ValidationFailed,
