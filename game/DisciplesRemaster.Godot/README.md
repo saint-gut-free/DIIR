@@ -2,13 +2,15 @@
 
 This project is the outer game-client adapter. It currently loads the project-owned native scenario JSON and produces deterministic immutable scene data: dimensions, terrain references, and inert object placements.
 
-`ValidatedScenarioSceneLoader` is the preferred composition boundary for a future host. It exposes scene data only after the scenario, every supplied content package, the combined typed catalog, and all scenario content references have passed validation. It never invents fallback content. See [validated scenario loading](../../docs/architecture/validated-scenario-loading.md).
+`NativeProjectSceneLoader` is the preferred composition boundary for a future host. It exposes scene data and an optional runtime checkpoint only after the portable manifest, scenario, every supplied content package, combined typed catalog, content references, and matching map dimensions have passed validation. It never invents fallback content. See [validated scenario loading](../../docs/architecture/validated-scenario-loading.md).
 
 No Godot SDK was installed automatically. The current assembly deliberately remains buildable with the pinned .NET SDK so domain, content, persistence, and adapter contracts can evolve and be tested independently.
 
 Until a compatible Godot .NET installation is available, the project is also a runnable headless host for project-owned runtime checkpoints:
 
 ```powershell
+dotnet run --project game/DisciplesRemaster.Godot -- validate-project samples/synthetic/minimal.project.json
+dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- validate-session samples/synthetic/sessions/minimal-session.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-session samples/synthetic/sessions/minimal-session.json
 dotnet run --project game/DisciplesRemaster.Godot -- advance-turn samples/synthetic/sessions/minimal-session.json --output artifacts/runtime/after-turn.session.json

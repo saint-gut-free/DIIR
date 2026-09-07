@@ -34,6 +34,7 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 ```powershell
 dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
+dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json
 ```
 
 Его контракт описан в [спецификации native project manifest v1](docs/specifications/native-project-manifest-v1.md).

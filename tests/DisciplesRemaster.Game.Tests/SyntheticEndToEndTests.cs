@@ -64,15 +64,16 @@ public sealed class SyntheticEndToEndTests
                 new ScenarioContentValidationService()),
             new GameSessionFileStore(new GameSessionJsonSerializer()));
 
-        NativeProjectLoadResult result = loader.Load(Sample("minimal.project.json"));
+        var sceneLoader = new NativeProjectSceneLoader(loader, scenarioValidation);
+
+        NativeProjectSceneLoadResult result = sceneLoader.Load(Sample("minimal.project.json"));
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("synthetic-project", result.Project!.Manifest.Id);
-        Assert.Equal("synthetic-minimal", result.Project.ScenarioBundle.Scenario.Id);
-        Assert.Equal(["synthetic"], result.Project.ScenarioBundle.ContentPackageIds);
+        Assert.Equal("synthetic-project", result.Project!.ProjectId);
+        Assert.Equal("synthetic-minimal", result.Project.Scene.ScenarioId);
+        Assert.Equal(["synthetic"], result.Project.ContentPackageIds);
         Assert.NotNull(result.Project.Session);
-        Assert.Equal(result.Project.ScenarioBundle.Scenario.Map.Width, result.Project.Session.MapSize.Width);
-        Assert.Equal(result.Project.ScenarioBundle.Scenario.Map.Height, result.Project.Session.MapSize.Height);
+        Assert.Equal(result.Project.Scene.Size, result.Project.Session.MapSize);
     }
 
     [Fact]
