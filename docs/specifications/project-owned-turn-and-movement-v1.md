@@ -26,3 +26,17 @@ This specification defines a deliberately small independent gameplay primitive. 
 - Weighted terrain, zones of control, party composition, combat engagement, diagonal movement, and other game rules are outside v1.
 
 These primitives remain in `DisciplesRemaster.Core`, have no dependency on content, persistence, Godot, or editor code, and can be replaced or extended only through a versioned design decision.
+
+## Minimal game session
+
+`GameSessionState` composes these primitives without changing the native scenario format. Session setup explicitly supplies:
+
+- map size;
+- ordered participant IDs;
+- actor ID, owner participant ID, position, and non-negative movement allowance.
+
+The session validates ownership, positions, and unique actor IDs before it is created. Only an actor owned by the active participant may move. A successful move returns a new immutable session and spends the route's step cost; a rejected move returns no updated state. Advancing the turn resets movement only for actors of the newly active participant.
+
+The caller supplies the passability predicate for each movement request. V1 does not implicitly block occupied actor positions or assign terrain costs; those policies must remain explicit until separately designed.
+
+Session setup is intentionally separate from native scenario v1 because that format defines inert placements and makes no ownership or gameplay claim. A later versioned scenario/runtime composition contract may map project content into actors after those rules are designed.

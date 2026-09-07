@@ -37,7 +37,7 @@
 
 ### M3 — Independent gameplay vertical slice
 
-Минимальные независимые правила round-robin turn sequencing и unweighted movement budget специфицированы и протестированы. Следующими нужно явно спроектировать ownership, actions, interaction и переходы состояния мира. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
+Минимальные независимые правила round-robin turn sequencing, ownership runtime-акторов и unweighted movement budget специфицированы и протестированы как immutable headless session. Следующими нужно явно спроектировать actions, interaction и переходы состояния мира, не смешивая их с native scenario v1. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
 
 ### M4 — Graphical scenario editor
 
