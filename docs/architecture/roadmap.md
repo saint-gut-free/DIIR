@@ -34,6 +34,7 @@
 - synthetic end-to-end tests загружают tracked scenario, content package и runtime checkpoint через production persistence API.
 - runnable headless host позволяет валидировать, просматривать и изменять runtime checkpoint до подключения Godot .NET.
 - strict bounded action log атомарно воспроизводит существующие project-owned advance-turn и explicit open-grid move действия.
+- typed content metadata имеет bounded undo/redo session и headless-команды create/add/rename/remove с validation-before-save.
 
 ## Следующие milestones
 
@@ -47,7 +48,7 @@
 
 ### M4 — Graphical scenario editor
 
-Редактор должен работать с native format и content catalog, предоставлять undo/redo, validation panel и deterministic save. Импорт оригинальных форматов остаётся отдельным адаптером.
+Headless-редактор уже работает с native scenario и content catalog, предоставляет bounded undo/redo model и deterministic atomic save. Для milestone остаются графический интерфейс, validation panel и интеграция этих контрактов с Godot. Импорт оригинальных форматов остаётся отдельным адаптером.
 
 ### M5 — Original-format import
 

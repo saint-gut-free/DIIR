@@ -31,3 +31,11 @@ Package v1 не задаёт изображения, аудио, локализ�
 ## JSON persistence
 
 JSON использует camelCase properties, двухпробельный отступ, UTF-8 и завершающий LF. Terrain и object archetype entries сортируются по локальному ID. Неизвестные свойства отклоняются. Встроенный file store принимает документы размером не более 16 MiB и записывает валидные packages через временный файл с атомарной заменой назначения.
+
+## Authoring contract
+
+`ContentPackageEditSession` предоставляет типизированные операции над metadata: изменение display name package, добавление, переименование и удаление terrain или object archetype. Каждая операция сначала строит новый immutable snapshot и пропускает его через тот же `IContentPackageValidationService`, который используется persistence. Невалидная операция не меняет current snapshot и историю.
+
+Undo/redo хранит только project-owned metadata, ограничен 100 snapshots по умолчанию и жёстким максимумом 1000. Новая операция после undo удаляет redo branch. CLI сохраняет только успешно применённый snapshot атомарным `ContentPackageFileStore`; `--output` позволяет сохранить новый документ без изменения входного.
+
+Authoring contract намеренно не содержит путей к изображениям и аудио, бинарных payload, характеристик, скриптов или утверждений о семантике оригинальной игры.

@@ -4,7 +4,7 @@
 
 ## Текущий статус
 
-Созданы каркас репозитория, исследовательские read-only инструменты, engine-neutral модель собственного сценария v1, typed content catalog, переносимый project manifest, детерминированная JSON persistence и headless-основа редактора. Формат поддерживает terrain overrides и инертные object placements; внешний игровой адаптер получает детерминированные scene data только после проверки всех ссылок на собственный контент и не создаёт зависимости ядра от Godot. Реализован независимый headless vertical slice для turn sequencing и движения по явно открытому grid; это собственные правила проекта, а не реконструкция Disciples II. Графический редактор, импорт исходных форматов и настоящий Godot host ещё не реализованы.
+Созданы каркас репозитория, исследовательские read-only инструменты, engine-neutral модель собственного сценария v1, typed content catalog, переносимый project manifest, детерминированная JSON persistence и headless-основа редактора. Собственные content metadata можно создавать и типизированно редактировать с validation-before-save и bounded undo/redo model. Формат поддерживает terrain overrides и инертные object placements; внешний игровой адаптер получает детерминированные scene data только после проверки всех ссылок на собственный контент и не создаёт зависимости ядра от Godot. Реализован независимый headless vertical slice для turn sequencing и движения по явно открытому grid; это собственные правила проекта, а не реконструкция Disciples II. Графический редактор, импорт исходных форматов и настоящий Godot host ещё не реализованы.
 
 ## Долгосрочное направление
 
@@ -28,6 +28,13 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 ```
 
 Создание и редактирование собственного документа описаны в `editor/DisciplesRemaster.Editor/README.md`. Этот формат не является `.sg`; будущий импорт оригинальных сценариев должен преобразовывать подтверждённые данные в независимую модель.
+
+Тот же headless editor создаёт собственный typed content package и добавляет в него metadata без binary assets:
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- create-content artifacts/content/base.package.json --id project --display-name "Project content"
+dotnet run --project editor/DisciplesRemaster.Editor -- add-terrain artifacts/content/base.package.json plain "Plain"
+```
 
 Переносимый manifest связывает scenario, content packages и optional runtime checkpoint только относительными путями:
 

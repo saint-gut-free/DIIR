@@ -18,6 +18,25 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/
 
 The output directory must already exist; `--content` may be repeated and `--session` is optional. Creation writes only the manifest and does not create or copy referenced documents. An existing manifest is protected unless `--force` is explicit. Validation resolves all content references and, when a checkpoint is present, checks that its map dimensions match the scenario. Absolute paths and `.` or `..` path segments are rejected. See [native project manifest v1](../../docs/specifications/native-project-manifest-v1.md).
 
+## Author typed content metadata
+
+Content packages declare project-owned terrain and inert object-archetype IDs. They do not contain binary assets or gameplay behavior.
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- create-content `
+  artifacts/content/base.package.json `
+  --id project `
+  --display-name "Project content"
+
+dotnet run --project editor/DisciplesRemaster.Editor -- add-terrain `
+  artifacts/content/base.package.json plain "Plain"
+
+dotnet run --project editor/DisciplesRemaster.Editor -- add-object-archetype `
+  artifacts/content/base.package.json landmark "Landmark"
+```
+
+Metadata can be renamed or removed with `set-content-name`, `set-terrain-name`, `remove-terrain`, `set-object-archetype-name`, and `remove-object-archetype`. Edit commands update the input atomically unless `--output <file>` is supplied. `create-content` protects an existing output unless `--force` is explicit. Every edit is validated before it can be saved, and entries are serialized in deterministic ID order.
+
 ## Create a scenario
 
 The output directory must already exist. Existing files are protected unless `--force` is explicitly supplied.

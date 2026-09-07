@@ -24,7 +24,16 @@ var projectLoader = new NativeProjectLoader(
 
 return args.FirstOrDefault() switch
 {
-    "validate-content" or "validate-scenario-content" =>
+    "create-content" or
+    "set-content-name" or
+    "add-terrain" or
+    "set-terrain-name" or
+    "remove-terrain" or
+    "add-object-archetype" or
+    "set-object-archetype-name" or
+    "remove-object-archetype" or
+    "validate-content" or
+    "validate-scenario-content" =>
         ContentEditorCommand.Run(args, contentStore, store, contentValidation, Console.Out, Console.Error),
     "create-project" or "validate-project" or "summary-project" =>
         ProjectEditorCommand.Run(args, projectLoader, projectManifestStore, Console.Out, Console.Error),
