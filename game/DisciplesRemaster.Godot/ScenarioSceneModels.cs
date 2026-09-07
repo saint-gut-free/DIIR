@@ -1,5 +1,6 @@
 using DisciplesRemaster.Core.Geometry;
 using DisciplesRemaster.Persistence.Scenarios;
+using DisciplesRemaster.Persistence.Projects;
 
 namespace DisciplesRemaster.Godot;
 
@@ -27,3 +28,9 @@ public sealed record ScenarioSceneLoadResult(
     ScenarioSceneData? Scene,
     ScenarioPersistenceErrorCode ErrorCode,
     string? Message);
+
+public sealed record ValidatedScenarioSceneLoadResult(
+    bool IsSuccess,
+    ScenarioSceneData? Scene,
+    IReadOnlyList<string> ContentPackageIds,
+    IReadOnlyList<ScenarioBundleLoadIssue> Issues);

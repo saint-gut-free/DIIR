@@ -26,6 +26,7 @@
 - immutable sparse grid;
 - bounded deterministic pathfinding с явными topology и passability rules;
 - typed content packages и catalog.
+- validated scenario bundle loading: сценарий попадает во внешний game-адаптер только после проверки всех content references.
 
 ## Следующие milestones
 

@@ -29,7 +29,18 @@ public sealed class ScenarioSceneLoader
         }
 
         ScenarioRuntimeView runtime = ScenarioRuntimeView.Create(load.Scenario, validationService);
-        ScenarioSceneData scene = new(
+        return new ScenarioSceneLoadResult(
+            true,
+            ScenarioSceneProjection.Project(runtime),
+            ScenarioPersistenceErrorCode.None,
+            null);
+    }
+}
+
+internal static class ScenarioSceneProjection
+{
+    public static ScenarioSceneData Project(ScenarioRuntimeView runtime) =>
+        new(
             runtime.ScenarioId,
             runtime.Title,
             runtime.Terrain.Size,
@@ -49,7 +60,4 @@ public sealed class ScenarioSceneLoader
                     placement.Position))
                 .ToList()
                 .AsReadOnly());
-
-        return new ScenarioSceneLoadResult(true, scene, ScenarioPersistenceErrorCode.None, null);
-    }
 }

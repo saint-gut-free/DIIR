@@ -1,6 +1,9 @@
 using DisciplesRemaster.Content.Scenarios;
+using DisciplesRemaster.Content.Catalog;
 using DisciplesRemaster.Core.Geometry;
 using DisciplesRemaster.Godot;
+using DisciplesRemaster.Persistence.Content;
+using DisciplesRemaster.Persistence.Projects;
 using DisciplesRemaster.Persistence.Scenarios;
 
 namespace DisciplesRemaster.Game.Tests;
@@ -58,6 +61,50 @@ public sealed class ScenarioSceneLoaderTests : IDisposable
         Assert.Equal(ScenarioPersistenceErrorCode.InvalidJson, result.ErrorCode);
     }
 
+    [Fact]
+    public void ValidatedLoad_ResolvedContent_ProjectsSceneAndPackageIds()
+    {
+        string scenarioPath = Path.Combine(directory, "validated-scene.json");
+        string packagePath = Path.Combine(directory, "synthetic.content.json");
+        Assert.True(store.Save(scenarioPath, CreateScenario()).IsSuccess);
+        var packageValidation = new ContentPackageValidationService();
+        var contentStore = new ContentPackageFileStore(new ContentPackageJsonSerializer(packageValidation));
+        Assert.True(contentStore.Save(packagePath, CreatePackage()).IsSuccess);
+        var bundleLoader = new ScenarioBundleLoader(
+            store,
+            contentStore,
+            packageValidation,
+            new ScenarioContentValidationService());
+        var validatedLoader = new ValidatedScenarioSceneLoader(bundleLoader, new ScenarioValidationService());
+
+        ValidatedScenarioSceneLoadResult result = validatedLoader.Load(scenarioPath, [packagePath]);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Scene);
+        Assert.Equal(["synthetic"], result.ContentPackageIds);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
+    public void ValidatedLoad_UnresolvedContent_DoesNotExposeScene()
+    {
+        string scenarioPath = Path.Combine(directory, "unresolved-scene.json");
+        Assert.True(store.Save(scenarioPath, CreateScenario()).IsSuccess);
+        var packageValidation = new ContentPackageValidationService();
+        var bundleLoader = new ScenarioBundleLoader(
+            store,
+            new ContentPackageFileStore(new ContentPackageJsonSerializer(packageValidation)),
+            packageValidation,
+            new ScenarioContentValidationService());
+        var validatedLoader = new ValidatedScenarioSceneLoader(bundleLoader, new ScenarioValidationService());
+
+        ValidatedScenarioSceneLoadResult result = validatedLoader.Load(scenarioPath, []);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Scene);
+        Assert.Contains(result.Issues, issue => issue.Code == ScenarioBundleLoadIssueCode.ScenarioContentInvalid);
+    }
+
     public void Dispose()
     {
         Directory.Delete(directory, true);
@@ -85,4 +132,19 @@ public sealed class ScenarioSceneLoaderTests : IDisposable
                     new ScenarioObjectPlacement("a-object", "synthetic:a", new GridPosition(2, 3)),
                 ],
             });
+
+    private static ContentPackageDefinition CreatePackage() =>
+        new(
+            ContentPackageFormatV1.Version,
+            "synthetic",
+            "Synthetic package",
+            [
+                new TerrainContentDefinition("plain", "Plain"),
+                new TerrainContentDefinition("forest", "Forest"),
+                new TerrainContentDefinition("water", "Water"),
+            ],
+            [
+                new ObjectArchetypeDefinition("a", "A object"),
+                new ObjectArchetypeDefinition("z", "Z object"),
+            ]);
 }
