@@ -16,4 +16,6 @@ Every applied edit produces a defensively copied scenario snapshot and passes st
 
 Undo and redo history is bounded (100 snapshots by default, at most 1,000). Applying a new edit after undo clears the redo branch. The session never performs persistence; a host explicitly saves `Current` through `IScenarioFileStore` when appropriate.
 
+Every headless mutation command (`set-title`, `set-default-terrain`, `resize-map`, `paint-terrain`, `place-object`, `move-object`, and `remove-object`) delegates to this same session boundary before saving. The CLI therefore cannot maintain a second, subtly different set of editing rules while the graphical host is developed.
+
 This component does not parse `.sg`, run the original editor, infer game behavior, or define graphical UI behavior.

@@ -270,38 +270,11 @@ public static class ScenarioEditorCommand
             return WriteLoadFailure(load, arguments[1], error);
         }
 
-        ScenarioDefinition source = load.Scenario;
-        if (source.Map.Objects.Any(placement => string.Equals(placement.Id, arguments[2], StringComparison.Ordinal)))
-        {
-            error.WriteLine("An object with this ID already exists.");
-            error.WriteLine("Code: DuplicateObjectId");
-            return ValidationErrorExitCode;
-        }
-
         var position = new GridPosition(x, y);
-        if (!Contains(source.Map, position))
-        {
-            error.WriteLine("Object position is outside the map.");
-            error.WriteLine("Code: ObjectPlacementOutsideMap");
-            return ValidationErrorExitCode;
-        }
-
-        List<ScenarioObjectPlacement> objects = source.Map.Objects.ToList();
-        objects.Add(new ScenarioObjectPlacement(arguments[2], arguments[3], position));
-        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
         string destination = outputPath ?? arguments[1];
-        ScenarioSaveResult save = store.Save(destination, updated);
-        if (!save.IsSuccess)
-        {
-            return WriteSaveFailure(save, destination, error);
-        }
-
-        output.WriteLine("Scenario object placed.");
-        output.WriteLine($"File: {SafeName(destination)}");
-        output.WriteLine($"Object ID: {arguments[2]}");
-        output.WriteLine($"Archetype: {arguments[3]}");
-        output.WriteLine($"Position: {x}, {y}");
-        return SuccessExitCode;
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).PlaceObject(
+            new ScenarioObjectPlacement(arguments[2], arguments[3], position));
+        return SaveEdit(store, edit, destination, "Scenario object placed.", output, error);
     }
 
     private static int MoveObject(
@@ -326,40 +299,10 @@ public static class ScenarioEditorCommand
             return WriteLoadFailure(load, arguments[1], error);
         }
 
-        ScenarioDefinition source = load.Scenario;
-        ScenarioObjectPlacement? existing = source.Map.Objects.SingleOrDefault(
-            placement => string.Equals(placement.Id, arguments[2], StringComparison.Ordinal));
-        if (existing is null)
-        {
-            error.WriteLine("Scenario object was not found.");
-            error.WriteLine("Code: ObjectNotFound");
-            return ValidationErrorExitCode;
-        }
-
         var position = new GridPosition(x, y);
-        if (!Contains(source.Map, position))
-        {
-            error.WriteLine("Object position is outside the map.");
-            error.WriteLine("Code: ObjectPlacementOutsideMap");
-            return ValidationErrorExitCode;
-        }
-
-        ScenarioObjectPlacement[] objects = source.Map.Objects
-            .Select(placement => ReferenceEquals(placement, existing) ? placement with { Position = position } : placement)
-            .ToArray();
-        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
         string destination = outputPath ?? arguments[1];
-        ScenarioSaveResult save = store.Save(destination, updated);
-        if (!save.IsSuccess)
-        {
-            return WriteSaveFailure(save, destination, error);
-        }
-
-        output.WriteLine("Scenario object moved.");
-        output.WriteLine($"File: {SafeName(destination)}");
-        output.WriteLine($"Object ID: {arguments[2]}");
-        output.WriteLine($"Position: {x}, {y}");
-        return SuccessExitCode;
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).MoveObject(arguments[2], position);
+        return SaveEdit(store, edit, destination, "Scenario object moved.", output, error);
     }
 
     private static int RemoveObject(
@@ -382,29 +325,9 @@ public static class ScenarioEditorCommand
             return WriteLoadFailure(load, arguments[1], error);
         }
 
-        ScenarioDefinition source = load.Scenario;
-        ScenarioObjectPlacement[] objects = source.Map.Objects
-            .Where(placement => !string.Equals(placement.Id, arguments[2], StringComparison.Ordinal))
-            .ToArray();
-        if (objects.Length == source.Map.Objects.Count)
-        {
-            error.WriteLine("Scenario object was not found.");
-            error.WriteLine("Code: ObjectNotFound");
-            return ValidationErrorExitCode;
-        }
-
-        ScenarioDefinition updated = source with { Map = source.Map with { Objects = objects } };
         string destination = outputPath ?? arguments[1];
-        ScenarioSaveResult save = store.Save(destination, updated);
-        if (!save.IsSuccess)
-        {
-            return WriteSaveFailure(save, destination, error);
-        }
-
-        output.WriteLine("Scenario object removed.");
-        output.WriteLine($"File: {SafeName(destination)}");
-        output.WriteLine($"Object ID: {arguments[2]}");
-        return SuccessExitCode;
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).RemoveObject(arguments[2]);
+        return SaveEdit(store, edit, destination, "Scenario object removed.", output, error);
     }
 
     private static int PaintTerrain(
@@ -425,42 +348,10 @@ public static class ScenarioEditorCommand
             return WriteLoadFailure(load, parsedOptions.InputPath!, error);
         }
 
-        ScenarioDefinition source = load.Scenario;
         var position = new GridPosition(parsedOptions.X, parsedOptions.Y);
-        if (source.Map.Width <= 0 || source.Map.Height <= 0 ||
-            !new GridSize(source.Map.Width, source.Map.Height).Contains(position))
-        {
-            error.WriteLine("Terrain position is outside the map.");
-            error.WriteLine("Code: TerrainPlacementOutsideMap");
-            return ValidationErrorExitCode;
-        }
-
-        List<TerrainPlacement> terrain = source.Map.Terrain
-            .Where(placement => placement.Position != position)
-            .ToList();
-        if (!string.Equals(parsedOptions.Terrain, source.Map.DefaultTerrain, StringComparison.Ordinal))
-        {
-            terrain.Add(new TerrainPlacement(position, parsedOptions.Terrain!));
-        }
-
-        ScenarioDefinition updated = source with
-        {
-            Map = source.Map with { Terrain = terrain },
-        };
         string outputPath = parsedOptions.OutputPath ?? parsedOptions.InputPath!;
-        ScenarioSaveResult save = store.Save(outputPath, updated);
-        if (!save.IsSuccess)
-        {
-            return WriteSaveFailure(save, outputPath, error);
-        }
-
-        output.WriteLine("Terrain override updated.");
-        output.WriteLine($"File: {SafeName(outputPath)}");
-        output.WriteLine($"Position: {parsedOptions.X}, {parsedOptions.Y}");
-        output.WriteLine($"Terrain: {parsedOptions.Terrain}");
-        output.WriteLine($"Overrides: {updated.Map.Terrain.Count}");
-        WriteWarnings(save.ValidationIssues, output);
-        return SuccessExitCode;
+        ScenarioEditResult edit = CreateEditSession(load.Scenario).PaintTerrain(position, parsedOptions.Terrain!);
+        return SaveEdit(store, edit, outputPath, "Terrain override updated.", output, error);
     }
 
     private static bool TryParseCreateOptions(
@@ -588,11 +479,6 @@ public static class ScenarioEditorCommand
         outputPath = arguments[requiredCount + 1];
         return true;
     }
-
-    private static bool Contains(ScenarioMapDefinition map, GridPosition position) =>
-        map.Width > 0 &&
-        map.Height > 0 &&
-        new GridSize(map.Width, map.Height).Contains(position);
 
     private static int WriteLoadFailure(ScenarioLoadResult result, string path, TextWriter error)
     {
