@@ -105,6 +105,53 @@ public sealed class NativeProjectManifestTests : IDisposable
     }
 
     [Fact]
+    public void FileStore_SaveAndLoad_RoundTripsDeterministicManifest()
+    {
+        var store = new NativeProjectManifestFileStore(new NativeProjectManifestJsonSerializer(validation));
+        string path = Path.Combine(directory, "saved.project.json");
+        NativeProjectManifest manifest = CreateManifest();
+
+        NativeProjectManifestSaveResult first = store.Save(path, manifest);
+        byte[] firstBytes = File.ReadAllBytes(path);
+        NativeProjectManifestSaveResult second = store.Save(path, manifest);
+        byte[] secondBytes = File.ReadAllBytes(path);
+        NativeProjectManifestLoadResult load = store.Load(path);
+
+        Assert.True(first.IsSuccess);
+        Assert.True(second.IsSuccess);
+        Assert.Equal(firstBytes, secondBytes);
+        Assert.True(load.IsSuccess);
+        Assert.Equal(manifest.FormatVersion, load.Manifest!.FormatVersion);
+        Assert.Equal(manifest.Id, load.Manifest.Id);
+        Assert.Equal(manifest.Scenario, load.Manifest.Scenario);
+        Assert.Equal(manifest.ContentPackages, load.Manifest.ContentPackages);
+        Assert.Equal(manifest.Session, load.Manifest.Session);
+        Assert.Empty(Directory.GetFiles(directory, "*.tmp", SearchOption.TopDirectoryOnly));
+    }
+
+    [Fact]
+    public void FileStore_InvalidManifestOrDirectory_DoesNotCreateOutput()
+    {
+        var store = new NativeProjectManifestFileStore(new NativeProjectManifestJsonSerializer(validation));
+        string invalidManifestPath = Path.Combine(directory, "invalid.project.json");
+        string missingDirectoryPath = Path.Combine(directory, "missing", "project.json");
+
+        NativeProjectManifestSaveResult invalidManifest = store.Save(
+            invalidManifestPath,
+            CreateManifest() with { Scenario = "../escape.json" });
+        NativeProjectManifestSaveResult missingDirectory = store.Save(
+            missingDirectoryPath,
+            CreateManifest());
+
+        Assert.False(invalidManifest.IsSuccess);
+        Assert.Equal(NativeProjectPersistenceErrorCode.ValidationFailed, invalidManifest.ErrorCode);
+        Assert.False(missingDirectory.IsSuccess);
+        Assert.Equal(NativeProjectPersistenceErrorCode.InvalidPath, missingDirectory.ErrorCode);
+        Assert.False(File.Exists(invalidManifestPath));
+        Assert.False(File.Exists(missingDirectoryPath));
+    }
+
+    [Fact]
     public void Load_CompleteProject_ResolvesRelativeDocuments()
     {
         NativeProjectLoader loader = CreateLoader();
@@ -241,5 +288,8 @@ public sealed class NativeProjectManifestTests : IDisposable
     {
         public NativeProjectManifestLoadResult Load(string path) =>
             new(true, manifest, NativeProjectPersistenceErrorCode.None, [], null);
+
+        public NativeProjectManifestSaveResult Save(string path, NativeProjectManifest? value) =>
+            throw new NotSupportedException();
     }
 }

@@ -37,8 +37,18 @@ Loading succeeds only when:
 
 The loader returns stable labels such as `manifest`, `scenario`, `content[0]`, and `session` in diagnostics. It does not expose absolute local paths in its issue model or CLI reports. Referenced documents remain separate files and are never copied into the manifest.
 
+The editor CLI can create a canonical manifest without hand-authoring JSON. Its output directory must already exist, repeated `--content` options are sorted during serialization, and an existing output is preserved unless `--force` is explicit. Creation validates the manifest structure but does not claim that referenced files already exist; run `validate-project` for complete bundle validation.
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- create-project project.json `
+  --id sample-project `
+  --scenario scenarios/main.json `
+  --content content/base.package.json `
+  --session sessions/current.json
+```
+
 ## Safety limits and versioning
 
-Version 1 limits the manifest to 1 MiB, 256 content-package references, 96 characters for the project ID, and 512 characters per relative path. A future incompatible schema requires a new `formatVersion`; version 1 readers reject it rather than guessing.
+Version 1 limits the manifest to 1 MiB, 256 content-package references, 96 characters for the project ID, and 512 characters per relative path. Saves use a temporary sibling followed by atomic replacement and best-effort cleanup. A future incompatible schema requires a new `formatVersion`; version 1 readers reject it rather than guessing.
 
 This is an internal project format. Original-game formats remain read-only future import inputs. `TODO-D2-RESEARCH`: no project manifest field implies compatibility with an original Disciples II project or scenario concept.

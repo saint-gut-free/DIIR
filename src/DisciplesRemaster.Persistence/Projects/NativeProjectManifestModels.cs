@@ -58,6 +58,7 @@ public enum NativeProjectPersistenceErrorCode
     DocumentTooLarge,
     InvalidJson,
     ValidationFailed,
+    WriteFailed,
     UnexpectedError,
 }
 
@@ -82,6 +83,12 @@ public sealed record NativeProjectManifestLoadResult(
     IReadOnlyList<NativeProjectManifestValidationIssue> Issues,
     string? Message);
 
+public sealed record NativeProjectManifestSaveResult(
+    bool IsSuccess,
+    NativeProjectPersistenceErrorCode ErrorCode,
+    IReadOnlyList<NativeProjectManifestValidationIssue> Issues,
+    string? Message);
+
 public interface INativeProjectManifestValidationService
 {
     NativeProjectManifestValidationResult Validate(NativeProjectManifest? manifest);
@@ -97,6 +104,8 @@ public interface INativeProjectManifestSerializer
 public interface INativeProjectManifestFileStore
 {
     NativeProjectManifestLoadResult Load(string path);
+
+    NativeProjectManifestSaveResult Save(string path, NativeProjectManifest? manifest);
 }
 
 public enum NativeProjectLoadIssueCode

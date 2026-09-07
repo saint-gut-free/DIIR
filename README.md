@@ -32,6 +32,7 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 Переносимый manifest связывает scenario, content packages и optional runtime checkpoint только относительными путями:
 
 ```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- create-project artifacts/project/project.json --id example-project --scenario scenarios/main.json --content content/base.package.json
 dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json

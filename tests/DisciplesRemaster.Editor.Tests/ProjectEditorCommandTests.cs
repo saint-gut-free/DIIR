@@ -5,8 +5,85 @@ using DisciplesRemaster.Persistence.Projects;
 
 namespace DisciplesRemaster.Editor.Tests;
 
-public sealed class ProjectEditorCommandTests
+public sealed class ProjectEditorCommandTests : IDisposable
 {
+    private readonly string directory = Path.Combine(Path.GetTempPath(), $"d2r-project-editor-{Guid.NewGuid():N}");
+    private readonly NativeProjectManifestFileStore manifestStore;
+
+    public ProjectEditorCommandTests()
+    {
+        Directory.CreateDirectory(directory);
+        manifestStore = new NativeProjectManifestFileStore(
+            new NativeProjectManifestJsonSerializer(new NativeProjectManifestValidationService()));
+    }
+
+    [Fact]
+    public void CreateProject_ValidOptions_WritesPortableDeterministicManifest()
+    {
+        string path = Path.Combine(directory, "created.project.json");
+
+        CommandResult result = Run(
+            new StubLoader(new NativeProjectLoadResult(CreateProject(), [])),
+            "create-project",
+            path,
+            "--id",
+            "created-project",
+            "--scenario",
+            "scenarios/main.json",
+            "--content",
+            "content/z.json",
+            "--content",
+            "content/a.json",
+            "--session",
+            "sessions/current.json");
+
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, result.ExitCode);
+        Assert.DoesNotContain(directory, result.Output, StringComparison.OrdinalIgnoreCase);
+        NativeProjectManifestLoadResult load = manifestStore.Load(path);
+        Assert.True(load.IsSuccess);
+        Assert.Equal("created-project", load.Manifest!.Id);
+        Assert.Equal(["content/a.json", "content/z.json"], load.Manifest.ContentPackages);
+        Assert.Equal("sessions/current.json", load.Manifest.Session);
+    }
+
+    [Fact]
+    public void CreateProject_ExistingOutput_RequiresExplicitForce()
+    {
+        string path = Path.Combine(directory, "existing.project.json");
+        File.WriteAllText(path, "preserve-me");
+
+        CommandResult protectedResult = RunCreate(path);
+        string protectedContent = File.ReadAllText(path);
+        CommandResult forcedResult = RunCreate(path, "--force");
+
+        Assert.Equal(ScenarioEditorCommand.InputErrorExitCode, protectedResult.ExitCode);
+        Assert.Contains("OutputAlreadyExists", protectedResult.Error, StringComparison.Ordinal);
+        Assert.Equal("preserve-me", protectedContent);
+        Assert.Equal(ScenarioEditorCommand.SuccessExitCode, forcedResult.ExitCode);
+        Assert.True(manifestStore.Load(path).IsSuccess);
+    }
+
+    [Fact]
+    public void CreateProject_UnsafeReference_ReturnsValidationErrorWithoutFile()
+    {
+        string path = Path.Combine(directory, "unsafe.project.json");
+
+        CommandResult result = Run(
+            new StubLoader(new NativeProjectLoadResult(CreateProject(), [])),
+            "create-project",
+            path,
+            "--id",
+            "unsafe",
+            "--scenario",
+            "../outside.json",
+            "--content",
+            "content/package.json");
+
+        Assert.Equal(ScenarioEditorCommand.ValidationErrorExitCode, result.ExitCode);
+        Assert.Contains(nameof(NativeProjectManifestValidationCode.PathEscapesProjectDirectory), result.Error, StringComparison.Ordinal);
+        Assert.False(File.Exists(path));
+    }
+
     [Fact]
     public void ValidateProject_ValidProject_ReturnsSuccessWithoutPaths()
     {
@@ -64,6 +141,10 @@ public sealed class ProjectEditorCommandTests
     [Theory]
     [InlineData()]
     [InlineData("unknown")]
+    [InlineData("create-project")]
+    [InlineData("create-project", "project.json")]
+    [InlineData("create-project", "project.json", "--id", "id", "--scenario", "scenario.json")]
+    [InlineData("create-project", "project.json", "--unknown", "value")]
     [InlineData("validate-project")]
     [InlineData("summary-project", "one", "two")]
     public void InvalidArguments_ReturnUsageError(params string[] arguments)
@@ -82,6 +163,12 @@ public sealed class ProjectEditorCommandTests
         Assert.Equal(ScenarioEditorCommand.SoftwareErrorExitCode, result.ExitCode);
         Assert.Contains("Code: UnexpectedError", result.Error, StringComparison.Ordinal);
         Assert.DoesNotContain("System.", result.Error, StringComparison.Ordinal);
+    }
+
+    public void Dispose()
+    {
+        Directory.Delete(directory, true);
+        GC.SuppressFinalize(this);
     }
 
     private static NativeProject CreateProject()
@@ -110,11 +197,26 @@ public sealed class ProjectEditorCommandTests
         return new NativeProject(manifest, new ScenarioBundle(scenario, catalog, ["synthetic"]), null);
     }
 
-    private static CommandResult Run(INativeProjectLoader loader, params string[] arguments)
+    private CommandResult RunCreate(string path, params string[] suffix) =>
+        Run(
+            new StubLoader(new NativeProjectLoadResult(CreateProject(), [])),
+            [
+                "create-project",
+                path,
+                "--id",
+                "created",
+                "--scenario",
+                "scenarios/main.json",
+                "--content",
+                "content/main.json",
+                .. suffix,
+            ]);
+
+    private CommandResult Run(INativeProjectLoader loader, params string[] arguments)
     {
         using var output = new StringWriter();
         using var error = new StringWriter();
-        int exitCode = ProjectEditorCommand.Run(arguments, loader, output, error);
+        int exitCode = ProjectEditorCommand.Run(arguments, loader, manifestStore, output, error);
         return new CommandResult(exitCode, output.ToString(), error.ToString());
     }
 

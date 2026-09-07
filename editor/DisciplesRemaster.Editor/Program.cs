@@ -11,8 +11,10 @@ var store = new ScenarioFileStore(serializer);
 var contentValidation = new DisciplesRemaster.Content.Catalog.ContentPackageValidationService();
 var contentStore = new ContentPackageFileStore(new ContentPackageJsonSerializer(contentValidation));
 var projectManifestValidation = new NativeProjectManifestValidationService();
+var projectManifestStore = new NativeProjectManifestFileStore(
+    new NativeProjectManifestJsonSerializer(projectManifestValidation));
 var projectLoader = new NativeProjectLoader(
-    new NativeProjectManifestFileStore(new NativeProjectManifestJsonSerializer(projectManifestValidation)),
+    projectManifestStore,
     new ScenarioBundleLoader(
         store,
         contentStore,
@@ -24,7 +26,7 @@ return args.FirstOrDefault() switch
 {
     "validate-content" or "validate-scenario-content" =>
         ContentEditorCommand.Run(args, contentStore, store, contentValidation, Console.Out, Console.Error),
-    "validate-project" or "summary-project" =>
-        ProjectEditorCommand.Run(args, projectLoader, Console.Out, Console.Error),
+    "create-project" or "validate-project" or "summary-project" =>
+        ProjectEditorCommand.Run(args, projectLoader, projectManifestStore, Console.Out, Console.Error),
     _ => ScenarioEditorCommand.Run(args, store, Console.Out, Console.Error),
 };

@@ -61,6 +61,85 @@ public sealed class NativeProjectManifestFileStore : INativeProjectManifestFileS
         }
     }
 
+    public NativeProjectManifestSaveResult Save(string path, NativeProjectManifest? manifest)
+    {
+        if (!TryNormalizePath(path, out string fullPath))
+        {
+            return SaveFailure(NativeProjectPersistenceErrorCode.InvalidPath, [], "Project manifest path is invalid.");
+        }
+
+        NativeProjectManifestSerializationResult serialization = serializer.Serialize(manifest);
+        if (!serialization.IsSuccess || serialization.Data is null)
+        {
+            return SaveFailure(serialization.ErrorCode, serialization.Issues, serialization.Message);
+        }
+
+        if (serialization.Data.LongLength > NativeProjectManifestFormatV1.MaximumDocumentBytes)
+        {
+            return SaveFailure(
+                NativeProjectPersistenceErrorCode.DocumentTooLarge,
+                [],
+                "Project manifest exceeds the safety limit.");
+        }
+
+        string? directory = Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            return SaveFailure(
+                NativeProjectPersistenceErrorCode.InvalidPath,
+                [],
+                "Project manifest output directory does not exist.");
+        }
+
+        string temporaryPath = Path.Combine(directory, $".{Path.GetFileName(fullPath)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            using (FileStream stream = new(
+                temporaryPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                32 * 1024,
+                FileOptions.WriteThrough))
+            {
+                stream.Write(serialization.Data);
+                stream.Flush(true);
+            }
+
+            File.Move(temporaryPath, fullPath, true);
+            return new NativeProjectManifestSaveResult(
+                true,
+                NativeProjectPersistenceErrorCode.None,
+                serialization.Issues,
+                null);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return SaveFailure(
+                NativeProjectPersistenceErrorCode.WriteFailed,
+                [],
+                "Project manifest is inaccessible for writing.");
+        }
+        catch (IOException)
+        {
+            return SaveFailure(
+                NativeProjectPersistenceErrorCode.WriteFailed,
+                [],
+                "Project manifest could not be written.");
+        }
+        catch (Exception)
+        {
+            return SaveFailure(
+                NativeProjectPersistenceErrorCode.UnexpectedError,
+                [],
+                "Project manifest saving failed unexpectedly.");
+        }
+        finally
+        {
+            TryDelete(temporaryPath);
+        }
+    }
+
     private static bool TryNormalizePath(string? path, out string fullPath)
     {
         fullPath = string.Empty;
@@ -84,4 +163,25 @@ public sealed class NativeProjectManifestFileStore : INativeProjectManifestFileS
         NativeProjectPersistenceErrorCode code,
         string message) =>
         new(false, null, code, [], message);
+
+    private static NativeProjectManifestSaveResult SaveFailure(
+        NativeProjectPersistenceErrorCode code,
+        IReadOnlyList<NativeProjectManifestValidationIssue> issues,
+        string? message) =>
+        new(false, code, issues, message);
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // A cleanup failure must not hide the primary save result.
+        }
+    }
 }

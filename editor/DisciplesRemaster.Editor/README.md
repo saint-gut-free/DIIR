@@ -7,11 +7,16 @@ Headless foundation of the project-owned scenario editor. It works only with the
 A portable project manifest links one scenario, one or more typed content packages, and an optional runtime checkpoint using paths relative to the manifest directory:
 
 ```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- create-project artifacts/project/project.json `
+  --id example-project `
+  --scenario scenarios/example.json `
+  --content content/base.package.json `
+  --session sessions/current.json
 dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
 ```
 
-Validation resolves all content references and, when a checkpoint is present, checks that its map dimensions match the scenario. Absolute paths and `.` or `..` path segments are rejected. See [native project manifest v1](../../docs/specifications/native-project-manifest-v1.md).
+The output directory must already exist; `--content` may be repeated and `--session` is optional. Creation writes only the manifest and does not create or copy referenced documents. An existing manifest is protected unless `--force` is explicit. Validation resolves all content references and, when a checkpoint is present, checks that its map dimensions match the scenario. Absolute paths and `.` or `..` path segments are rejected. See [native project manifest v1](../../docs/specifications/native-project-manifest-v1.md).
 
 ## Create a scenario
 
