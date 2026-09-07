@@ -38,6 +38,46 @@ public sealed class HeadlessProjectCommandTests
         Assert.Contains("Active participant: blue", result.Output, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void RenderProject_ValidViewport_ProducesBoundedDiagnosticViewWithoutPathLeakage()
+    {
+        string privateDirectory = Path.Combine(Path.GetTempPath(), "d2r-render-private");
+        string path = Path.Combine(privateDirectory, "minimal.project.json");
+        NativeProjectSceneLoader loader = CreateLoader(
+            new NativeProjectLoadResult(NativeProjectSceneLoaderTests.CreateProject(includeSession: true), []));
+
+        CommandResult result = Run(
+            loader,
+            "render-project",
+            path,
+            "--origin-x",
+            "2",
+            "--origin-y",
+            "1",
+            "--width",
+            "3",
+            "--height",
+            "2");
+
+        Assert.Equal(HeadlessGameCommand.SuccessExitCode, result.ExitCode);
+        Assert.Contains("Native project diagnostic viewport", result.Output, StringComparison.Ordinal);
+        Assert.Contains("Origin: 2,1", result.Output, StringComparison.Ordinal);
+        Assert.Contains("Viewport: 3 x 2", result.Output, StringComparison.Ordinal);
+        Assert.DoesNotContain(privateDirectory, result.AllOutput, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RenderProject_OriginOutsideMap_ReturnsValidationError()
+    {
+        NativeProjectSceneLoader loader = CreateLoader(
+            new NativeProjectLoadResult(NativeProjectSceneLoaderTests.CreateProject(includeSession: false), []));
+
+        CommandResult result = Run(loader, "render-project", "project.json", "--origin-x", "8");
+
+        Assert.Equal(HeadlessGameCommand.ValidationErrorExitCode, result.ExitCode);
+        Assert.Contains("OriginOutsideMap", result.Error, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("FileNotFound", HeadlessGameCommand.InputErrorExitCode)]
     [InlineData("ValidationFailed", HeadlessGameCommand.ValidationErrorExitCode)]
@@ -63,6 +103,11 @@ public sealed class HeadlessProjectCommandTests
     [InlineData("unknown")]
     [InlineData("validate-project")]
     [InlineData("summary-project", "one", "two")]
+    [InlineData("render-project")]
+    [InlineData("render-project", "project.json", "--width", "0")]
+    [InlineData("render-project", "project.json", "--height", "61")]
+    [InlineData("render-project", "project.json", "--width", "10", "--width", "20")]
+    [InlineData("render-project", "project.json", "--unknown", "1")]
     public void InvalidArguments_ReturnUsageError(params string[] arguments)
     {
         NativeProjectSceneLoader loader = CreateLoader(

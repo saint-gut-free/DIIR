@@ -11,6 +11,7 @@ Until a compatible Godot .NET installation is available, the project is also a r
 ```powershell
 dotnet run --project game/DisciplesRemaster.Godot -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json
+dotnet run --project game/DisciplesRemaster.Godot -- render-project samples/synthetic/minimal.project.json --width 20 --height 12
 dotnet run --project game/DisciplesRemaster.Godot -- validate-session samples/synthetic/sessions/minimal-session.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-session samples/synthetic/sessions/minimal-session.json
 dotnet run --project game/DisciplesRemaster.Godot -- advance-turn samples/synthetic/sessions/minimal-session.json --output artifacts/runtime/after-turn.session.json
@@ -21,6 +22,8 @@ dotnet run --project game/DisciplesRemaster.Godot -- replay-open-grid samples/sy
 `move-open-grid` is intentionally explicit: it uses the project-owned orthogonal topology and treats every in-bounds position as passable. It is a test harness, not a claim about terrain, occupancy, or original-game movement rules. Omitting `--output` atomically updates the input checkpoint.
 
 `replay-open-grid` applies a strict, bounded [action log v1](../../docs/specifications/game-session-action-log-v1.md) atomically. The complete batch is validated before execution, and a rejected action never produces a partial output checkpoint. Its input files remain unchanged.
+
+`render-project` produces a bounded diagnostic text viewport from the already validated scene projection. Symbols distinguish default terrain, terrain overrides, inert objects, runtime actors, and layered cells without assigning graphics or gameplay semantics. The default viewport is `40 x 20`; use `--origin-x`, `--origin-y`, `--width`, and `--height` within the documented hard limits. See [diagnostic viewport v1](../../docs/specifications/native-project-diagnostic-viewport-v1.md).
 
 The future Godot host will translate `ScenarioSceneData` into engine nodes and resources. Domain libraries must never reference Godot APIs.
 

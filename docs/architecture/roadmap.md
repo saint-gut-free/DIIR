@@ -35,6 +35,7 @@
 - runnable headless host позволяет валидировать, просматривать и изменять runtime checkpoint до подключения Godot .NET.
 - strict bounded action log атомарно воспроизводит существующие project-owned advance-turn и explicit open-grid move действия.
 - typed content metadata имеет bounded undo/redo session и headless-команды create/add/rename/remove с validation-before-save.
+- bounded deterministic text viewport проверяет полную scene/runtime projection до подключения настоящего Godot renderer.
 
 ## Следующие milestones
 

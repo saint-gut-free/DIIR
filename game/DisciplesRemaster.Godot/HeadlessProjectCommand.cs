@@ -18,11 +18,31 @@ public static class HeadlessProjectCommand
 
         try
         {
-            if (arguments.Count != 2 ||
-                arguments.FirstOrDefault() is not ("validate-project" or "summary-project") ||
-                string.IsNullOrWhiteSpace(arguments[1]))
+            if (arguments.Count == 0)
             {
                 return UsageFailure(error);
+            }
+
+            NativeProjectTextRenderOptions? renderOptions = null;
+            switch (arguments[0])
+            {
+                case "validate-project":
+                case "summary-project":
+                    if (arguments.Count != 2 || string.IsNullOrWhiteSpace(arguments[1]))
+                    {
+                        return UsageFailure(error);
+                    }
+
+                    break;
+                case "render-project":
+                    if (!TryParseRenderOptions(arguments, out renderOptions))
+                    {
+                        return UsageFailure(error);
+                    }
+
+                    break;
+                default:
+                    return UsageFailure(error);
             }
 
             NativeProjectSceneLoadResult load = loader.Load(arguments[1]);
@@ -31,9 +51,12 @@ public static class HeadlessProjectCommand
                 return WriteFailure(load, arguments[1], error);
             }
 
-            return arguments[0] == "validate-project"
-                ? WriteValidation(load.Project, arguments[1], output)
-                : WriteSummary(load.Project, arguments[1], output);
+            return arguments[0] switch
+            {
+                "validate-project" => WriteValidation(load.Project, arguments[1], output),
+                "summary-project" => WriteSummary(load.Project, arguments[1], output),
+                _ => WriteRender(load.Project, renderOptions!, output, error),
+            };
         }
         catch (Exception)
         {
@@ -79,6 +102,90 @@ public static class HeadlessProjectCommand
         return HeadlessGameCommand.SuccessExitCode;
     }
 
+    private static int WriteRender(
+        NativeProjectSceneData project,
+        NativeProjectTextRenderOptions options,
+        TextWriter output,
+        TextWriter error)
+    {
+        NativeProjectTextRenderResult result = new NativeProjectTextRenderer().Render(project, options);
+        if (!result.IsSuccess || result.Text is null)
+        {
+            error.WriteLine("Native project viewport could not be rendered.");
+            foreach (NativeProjectTextRenderIssue issue in result.Issues)
+            {
+                error.WriteLine($"{issue.Code} [{issue.PropertyPath}]: {issue.Message}");
+            }
+
+            return HeadlessGameCommand.ValidationErrorExitCode;
+        }
+
+        output.Write(result.Text);
+        return HeadlessGameCommand.SuccessExitCode;
+    }
+
+    private static bool TryParseRenderOptions(
+        IReadOnlyList<string> arguments,
+        out NativeProjectTextRenderOptions? options)
+    {
+        options = null;
+        if (arguments.Count < 2 || string.IsNullOrWhiteSpace(arguments[1]))
+        {
+            return false;
+        }
+
+        int originX = 0;
+        int originY = 0;
+        int width = NativeProjectTextRenderRules.DefaultViewportWidth;
+        int height = NativeProjectTextRenderRules.DefaultViewportHeight;
+        HashSet<string> seen = new(StringComparer.Ordinal);
+        for (int index = 2; index < arguments.Count; index++)
+        {
+            string argument = arguments[index];
+            if (index + 1 >= arguments.Count || !seen.Add(argument))
+            {
+                return false;
+            }
+
+            string value = arguments[++index];
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number))
+            {
+                return false;
+            }
+
+            switch (argument)
+            {
+                case "--origin-x":
+                    originX = number;
+                    break;
+                case "--origin-y":
+                    originY = number;
+                    break;
+                case "--width":
+                    width = number;
+                    break;
+                case "--height":
+                    height = number;
+                    break;
+                default:
+                    return false;
+            }
+        }
+
+        if (originX < 0 ||
+            originY < 0 ||
+            width < 1 ||
+            width > NativeProjectTextRenderRules.MaximumViewportWidth ||
+            height < 1 ||
+            height > NativeProjectTextRenderRules.MaximumViewportHeight)
+        {
+            return false;
+        }
+
+        options = new NativeProjectTextRenderOptions(originX, originY, width, height);
+        return true;
+    }
+
     private static int WriteFailure(
         NativeProjectSceneLoadResult load,
         string path,
@@ -114,6 +221,7 @@ public static class HeadlessProjectCommand
         error.WriteLine("Usage:");
         error.WriteLine("  validate-project <project-manifest>");
         error.WriteLine("  summary-project <project-manifest>");
+        error.WriteLine("  render-project <project-manifest> [--origin-x <n>] [--origin-y <n>] [--width <n>] [--height <n>]");
         return HeadlessGameCommand.UsageErrorExitCode;
     }
 

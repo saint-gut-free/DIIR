@@ -43,9 +43,10 @@ dotnet run --project editor/DisciplesRemaster.Editor -- create-project artifacts
 dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json
+dotnet run --project game/DisciplesRemaster.Godot -- render-project samples/synthetic/minimal.project.json --width 20 --height 12
 ```
 
-Его контракт описан в [спецификации native project manifest v1](docs/specifications/native-project-manifest-v1.md).
+Его контракт описан в [спецификации native project manifest v1](docs/specifications/native-project-manifest-v1.md). Bounded text viewport позволяет проверить итоговую scene/runtime projection без Godot SDK; его символы показывают только слои собственных данных проекта и не имитируют графику или механику оригинала.
 
 Синтетические scenario, content package и runtime checkpoint проходят end-to-end тест через production persistence API. Минимальный checkpoint находится в `samples/synthetic/sessions/minimal-session.json`; его независимые правила описаны в [спецификации turn/movement](docs/specifications/project-owned-turn-and-movement-v1.md) и [формате checkpoint v1](docs/specifications/game-session-checkpoint-v1.md). Эти правила являются собственным дизайном проекта, а не заявлением о поведении оригинальной игры.
 
