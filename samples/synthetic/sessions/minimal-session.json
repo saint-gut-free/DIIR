@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "mapWidth": 8,
+  "mapHeight": 6,
+  "participantIds": [
+    "blue",
+    "red"
+  ],
+  "activeParticipantIndex": 0,
+  "roundNumber": 1,
+  "actors": [
+    {
+      "id": "blue-actor",
+      "ownerParticipantId": "blue",
+      "x": 1,
+      "y": 1,
+      "movementAllowance": 4,
+      "remainingMovement": 4
+    },
+    {
+      "id": "red-actor",
+      "ownerParticipantId": "red",
+      "x": 6,
+      "y": 4,
+      "movementAllowance": 3,
+      "remainingMovement": 3
+    }
+  ]
+}

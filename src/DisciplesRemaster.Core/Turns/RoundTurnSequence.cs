@@ -119,6 +119,9 @@ public sealed class RoundTurnSequence
         return new RoundTurnSequence(participantIds, nextIndex, nextRound);
     }
 
+    internal RoundTurnSequence RestorePosition(int activeIndex, long roundNumber) =>
+        new(participantIds, activeIndex, roundNumber);
+
     private static RoundTurnValidationIssue Issue(
         RoundTurnValidationCode code,
         string propertyPath,

@@ -143,6 +143,48 @@ public sealed class GameSessionTests
         Assert.Equal(2, nextRedTurn.Turn.RoundNumber);
     }
 
+    [Fact]
+    public void Restore_ValidCheckpoint_PreservesTurnAndRemainingMovement()
+    {
+        GameSessionCreationResult result = GameSessionState.Restore(
+            new GridSize(5, 5),
+            ["blue", "red"],
+            activeParticipantIndex: 1,
+            roundNumber: 4,
+            [
+                new GameActorState("blue-actor", "blue", new GridPosition(1, 2), 5, 2),
+                new GameActorState("red-actor", "red", new GridPosition(3, 4), 3, 1),
+            ]);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("red", result.Session!.Turn.ActiveParticipantId);
+        Assert.Equal(4, result.Session.Turn.RoundNumber);
+        Assert.Equal(2, result.Session.Actors["blue-actor"].RemainingMovement);
+    }
+
+    [Theory]
+    [InlineData(-1, 1, 0, GameSessionValidationCode.InvalidActiveParticipantIndex)]
+    [InlineData(2, 1, 0, GameSessionValidationCode.InvalidActiveParticipantIndex)]
+    [InlineData(0, 0, 0, GameSessionValidationCode.InvalidRoundNumber)]
+    [InlineData(0, 1, -1, GameSessionValidationCode.InvalidRemainingMovement)]
+    [InlineData(0, 1, 4, GameSessionValidationCode.InvalidRemainingMovement)]
+    public void Restore_InvalidCheckpoint_ReturnsStructuredIssue(
+        int activeIndex,
+        long round,
+        int remaining,
+        GameSessionValidationCode expected)
+    {
+        GameSessionCreationResult result = GameSessionState.Restore(
+            new GridSize(5, 5),
+            ["blue", "red"],
+            activeIndex,
+            round,
+            [new GameActorState("blue-actor", "blue", new GridPosition(0, 0), 3, remaining)]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Issues, issue => issue.Code == expected);
+    }
+
     private static GameSessionState CreateSession() =>
         GameSessionState.Create(
             new GridSize(5, 5),

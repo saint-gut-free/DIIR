@@ -18,6 +18,7 @@
 - terrain overrides и инертные object placements;
 - структурная и cross-content валидация;
 - детерминированная атомарная persistence;
+- versioned deterministic checkpoint persistence для собственного headless runtime state;
 - headless create/validate/summary/edit workflow;
 - bounded engine-neutral undo/redo session для terrain и inert object edits;
 - deterministic scene projection для будущего Godot host.

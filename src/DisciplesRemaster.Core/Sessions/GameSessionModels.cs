@@ -36,6 +36,9 @@ public enum GameSessionValidationCode
     UnknownOwnerParticipant,
     ActorOutsideGrid,
     InvalidMovementAllowance,
+    InvalidRemainingMovement,
+    InvalidActiveParticipantIndex,
+    InvalidRoundNumber,
 }
 
 public sealed record GameSessionValidationIssue(
@@ -161,6 +164,78 @@ public sealed class GameSessionState
 
         return new GameSessionCreationResult(
             new GameSessionState(mapSize, turnResult.Sequence, actorStates),
+            []);
+    }
+
+    public static GameSessionCreationResult Restore(
+        GridSize mapSize,
+        IEnumerable<string?> participantIds,
+        int activeParticipantIndex,
+        long roundNumber,
+        IEnumerable<GameActorState?> actors)
+    {
+        ArgumentNullException.ThrowIfNull(participantIds);
+        ArgumentNullException.ThrowIfNull(actors);
+
+        string?[] participantValues = participantIds.ToArray();
+        GameActorState?[] actorValues = actors.ToArray();
+        GameSessionCreationResult creation = Create(
+            mapSize,
+            participantValues,
+            actorValues.Select(actor => actor is null
+                ? null
+                : new GameActorDefinition(
+                    actor.Id,
+                    actor.OwnerParticipantId,
+                    actor.Position,
+                    actor.MovementAllowance)));
+        List<GameSessionValidationIssue> issues = creation.Issues.ToList();
+
+        if (activeParticipantIndex < 0 || activeParticipantIndex >= participantValues.Length)
+        {
+            issues.Add(Issue(
+                GameSessionValidationCode.InvalidActiveParticipantIndex,
+                "activeParticipantIndex",
+                nameof(GameSessionValidationCode.InvalidActiveParticipantIndex),
+                "Active participant index is outside the participant sequence."));
+        }
+
+        if (roundNumber < 1)
+        {
+            issues.Add(Issue(
+                GameSessionValidationCode.InvalidRoundNumber,
+                "roundNumber",
+                nameof(GameSessionValidationCode.InvalidRoundNumber),
+                "Round number must be positive."));
+        }
+
+        for (int index = 0; index < actorValues.Length; index++)
+        {
+            GameActorState? actor = actorValues[index];
+            if (actor is not null &&
+                (actor.RemainingMovement < 0 || actor.RemainingMovement > actor.MovementAllowance))
+            {
+                issues.Add(Issue(
+                    GameSessionValidationCode.InvalidRemainingMovement,
+                    $"actors[{index}].remainingMovement",
+                    nameof(GameSessionValidationCode.InvalidRemainingMovement),
+                    "Remaining movement must be between zero and the actor movement allowance."));
+            }
+        }
+
+        GameSessionValidationIssue[] sortedIssues = issues
+            .OrderBy(issue => issue.PropertyPath, StringComparer.Ordinal)
+            .ThenBy(issue => issue.Code)
+            .ThenBy(issue => issue.DetailCode, StringComparer.Ordinal)
+            .ToArray();
+        if (sortedIssues.Length > 0 || creation.Session is null)
+        {
+            return new GameSessionCreationResult(null, sortedIssues);
+        }
+
+        RoundTurnSequence restoredTurn = creation.Session.Turn.RestorePosition(activeParticipantIndex, roundNumber);
+        return new GameSessionCreationResult(
+            creation.Session.WithTurnAndActors(restoredTurn, actorValues.Cast<GameActorState>()),
             []);
     }
 
