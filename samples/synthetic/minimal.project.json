@@ -1,0 +1,9 @@
+{
+  "formatVersion": 1,
+  "id": "synthetic-project",
+  "scenario": "scenarios/minimal-scenario.json",
+  "contentPackages": [
+    "content/synthetic.package.json"
+  ],
+  "session": "sessions/minimal-session.json"
+}

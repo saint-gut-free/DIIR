@@ -24,15 +24,19 @@
 
   <ItemGroup>
     <Content Include="..\..\samples\synthetic\content\synthetic.package.json">
-      <Link>Samples\synthetic.package.json</Link>
+      <Link>Samples\content\synthetic.package.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\samples\synthetic\scenarios\minimal-scenario.json">
-      <Link>Samples\minimal-scenario.json</Link>
+      <Link>Samples\scenarios\minimal-scenario.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\samples\synthetic\sessions\minimal-session.json">
-      <Link>Samples\minimal-session.json</Link>
+      <Link>Samples\sessions\minimal-session.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\samples\synthetic\minimal.project.json">
+      <Link>Samples\minimal.project.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

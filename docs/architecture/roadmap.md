@@ -30,6 +30,7 @@
 - минимальные project-owned round-robin turn и unweighted movement-budget primitives;
 - typed content packages и catalog.
 - validated scenario bundle loading: сценарий попадает во внешний game-адаптер только после проверки всех content references.
+- portable native project manifest связывает scenario, typed content packages и optional runtime checkpoint относительными путями и проверяет bundle целиком.
 - synthetic end-to-end tests загружают tracked scenario, content package и runtime checkpoint через production persistence API.
 - runnable headless host позволяет валидировать, просматривать и изменять runtime checkpoint до подключения Godot .NET.
 

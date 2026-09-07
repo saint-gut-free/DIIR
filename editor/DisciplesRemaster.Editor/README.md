@@ -2,6 +2,17 @@
 
 Headless foundation of the project-owned scenario editor. It works only with the native JSON format and does not read or convert original `.sg` files.
 
+## Validate a complete native project
+
+A portable project manifest links one scenario, one or more typed content packages, and an optional runtime checkpoint using paths relative to the manifest directory:
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
+dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
+```
+
+Validation resolves all content references and, when a checkpoint is present, checks that its map dimensions match the scenario. Absolute paths and `.` or `..` path segments are rejected. See [native project manifest v1](../../docs/specifications/native-project-manifest-v1.md).
+
 ## Create a scenario
 
 The output directory must already exist. Existing files are protected unless `--force` is explicitly supplied.

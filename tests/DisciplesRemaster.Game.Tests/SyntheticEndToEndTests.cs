@@ -25,8 +25,8 @@ public sealed class SyntheticEndToEndTests
         var sceneLoader = new ValidatedScenarioSceneLoader(bundleLoader, scenarioValidation);
 
         ValidatedScenarioSceneLoadResult result = sceneLoader.Load(
-            Sample("minimal-scenario.json"),
-            [Sample("synthetic.package.json")]);
+            Sample("scenarios", "minimal-scenario.json"),
+            [Sample("content", "synthetic.package.json")]);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("synthetic-minimal", result.Scene!.ScenarioId);
@@ -40,7 +40,7 @@ public sealed class SyntheticEndToEndTests
     {
         var store = new GameSessionFileStore(new GameSessionJsonSerializer());
 
-        GameSessionLoadResult result = store.Load(Sample("minimal-session.json"));
+        GameSessionLoadResult result = store.Load(Sample("sessions", "minimal-session.json"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("blue", result.Session!.Turn.ActiveParticipantId);
@@ -50,16 +50,42 @@ public sealed class SyntheticEndToEndTests
     }
 
     [Fact]
+    public void TrackedProjectManifest_LoadsCompleteValidatedProject()
+    {
+        var scenarioValidation = new ScenarioValidationService();
+        var packageValidation = new ContentPackageValidationService();
+        var loader = new NativeProjectLoader(
+            new NativeProjectManifestFileStore(
+                new NativeProjectManifestJsonSerializer(new NativeProjectManifestValidationService())),
+            new ScenarioBundleLoader(
+                new ScenarioFileStore(new ScenarioJsonSerializer(scenarioValidation)),
+                new ContentPackageFileStore(new ContentPackageJsonSerializer(packageValidation)),
+                packageValidation,
+                new ScenarioContentValidationService()),
+            new GameSessionFileStore(new GameSessionJsonSerializer()));
+
+        NativeProjectLoadResult result = loader.Load(Sample("minimal.project.json"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("synthetic-project", result.Project!.Manifest.Id);
+        Assert.Equal("synthetic-minimal", result.Project.ScenarioBundle.Scenario.Id);
+        Assert.Equal(["synthetic"], result.Project.ScenarioBundle.ContentPackageIds);
+        Assert.NotNull(result.Project.Session);
+        Assert.Equal(result.Project.ScenarioBundle.Scenario.Map.Width, result.Project.Session.MapSize.Width);
+        Assert.Equal(result.Project.ScenarioBundle.Scenario.Map.Height, result.Project.Session.MapSize.Height);
+    }
+
+    [Fact]
     public void TrackedRuntimeSamples_AreProjectOwnedJsonOnly()
     {
-        string[] files = Directory.GetFiles(SamplesDirectory, "*", SearchOption.TopDirectoryOnly);
+        string[] files = Directory.GetFiles(SamplesDirectory, "*", SearchOption.AllDirectories);
 
-        Assert.Equal(3, files.Length);
+        Assert.Equal(4, files.Length);
         Assert.All(files, path => Assert.EndsWith(".json", path, StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(files, path =>
             Path.GetExtension(path) is ".sg" or ".sav" or ".exe" or ".dll");
     }
 
-    private static string Sample(string filename) =>
-        Path.Combine(SamplesDirectory, filename);
+    private static string Sample(params string[] pathSegments) =>
+        Path.Combine([SamplesDirectory, .. pathSegments]);
 }

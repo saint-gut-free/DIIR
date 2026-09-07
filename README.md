@@ -4,7 +4,7 @@
 
 ## Текущий статус
 
-Созданы каркас репозитория, исследовательские read-only инструменты, engine-neutral модель собственного сценария v1, typed content catalog, детерминированная JSON persistence и headless-основа редактора. Формат поддерживает terrain overrides и инертные object placements; внешний игровой адаптер получает детерминированные scene data только после проверки всех ссылок на собственный контент и не создаёт зависимости ядра от Godot. Игровые механики, графический редактор, импорт исходных форматов и Godot host ещё не реализованы.
+Созданы каркас репозитория, исследовательские read-only инструменты, engine-neutral модель собственного сценария v1, typed content catalog, переносимый project manifest, детерминированная JSON persistence и headless-основа редактора. Формат поддерживает terrain overrides и инертные object placements; внешний игровой адаптер получает детерминированные scene data только после проверки всех ссылок на собственный контент и не создаёт зависимости ядра от Godot. Реализован независимый headless vertical slice для turn sequencing и движения по явно открытому grid; это собственные правила проекта, а не реконструкция Disciples II. Графический редактор, импорт исходных форматов и настоящий Godot host ещё не реализованы.
 
 ## Долгосрочное направление
 
@@ -28,6 +28,15 @@ dotnet run --project editor/DisciplesRemaster.Editor -- summary samples/syntheti
 ```
 
 Создание и редактирование собственного документа описаны в `editor/DisciplesRemaster.Editor/README.md`. Этот формат не является `.sg`; будущий импорт оригинальных сценариев должен преобразовывать подтверждённые данные в независимую модель.
+
+Переносимый manifest связывает scenario, content packages и optional runtime checkpoint только относительными путями:
+
+```powershell
+dotnet run --project editor/DisciplesRemaster.Editor -- validate-project samples/synthetic/minimal.project.json
+dotnet run --project editor/DisciplesRemaster.Editor -- summary-project samples/synthetic/minimal.project.json
+```
+
+Его контракт описан в [спецификации native project manifest v1](docs/specifications/native-project-manifest-v1.md).
 
 Синтетические scenario, content package и runtime checkpoint проходят end-to-end тест через production persistence API. Минимальный checkpoint находится в `samples/synthetic/sessions/minimal-session.json`; его независимые правила описаны в [спецификации turn/movement](docs/specifications/project-owned-turn-and-movement-v1.md) и [формате checkpoint v1](docs/specifications/game-session-checkpoint-v1.md). Эти правила являются собственным дизайном проекта, а не заявлением о поведении оригинальной игры.
 
