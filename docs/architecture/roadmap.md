@@ -25,6 +25,7 @@
 
 - immutable sparse grid;
 - bounded deterministic pathfinding с явными topology и passability rules;
+- минимальные project-owned round-robin turn и unweighted movement-budget primitives;
 - typed content packages и catalog.
 - validated scenario bundle loading: сценарий попадает во внешний game-адаптер только после проверки всех content references.
 
@@ -36,7 +37,7 @@
 
 ### M3 — Independent gameplay vertical slice
 
-До реализации нужно явно спроектировать собственные правила turn sequencing, movement budget, ownership и interaction. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
+Минимальные независимые правила round-robin turn sequencing и unweighted movement budget специфицированы и протестированы. Следующими нужно явно спроектировать ownership, actions, interaction и переходы состояния мира. Если заявляется соответствие Disciples II, каждое неизвестное правило сначала получает `TODO-D2-RESEARCH` и воспроизводимые evidence.
 
 ### M4 — Graphical scenario editor
 
