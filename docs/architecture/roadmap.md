@@ -36,6 +36,7 @@
 - strict bounded action log атомарно воспроизводит существующие project-owned advance-turn и explicit open-grid move действия.
 - typed content metadata имеет bounded undo/redo session и headless-команды create/add/rename/remove с validation-before-save.
 - bounded deterministic text viewport проверяет полную scene/runtime projection до подключения настоящего Godot renderer.
+- reproducible headless test package публикует game/editor CLI и только tracked synthetic samples в ignored `artifacts/builds/`.
 
 ## Следующие milestones
 

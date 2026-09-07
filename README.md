@@ -76,6 +76,14 @@ dotnet test
 
 Сценарий по умолчанию собирает и тестирует конфигурацию `Release`, проверяет `dotnet format`, whitespace и отсутствие запрещённых original-material candidates. Для быстрой локальной итерации допустимо явно передать `-Configuration Debug`; CI всегда использует значение по умолчанию.
 
+Первый framework-dependent headless test build для текущей платформы создаётся воспроизводимой командой:
+
+```powershell
+./scripts/publish-headless-test-build.ps1
+```
+
+Результат и ZIP помещаются только в ignored `artifacts/builds/`. Пакет содержит game/editor CLI и tracked synthetic samples, но не содержит original-game materials. Для запуска требуется .NET 10 runtime; это диагностический предшественник, а не графический Godot build.
+
 ## Структура
 
 - `src/` — независимые библиотеки ядра, контента, хранения и будущего импорта;
