@@ -1,3 +1,4 @@
+#requires -Version 7.0
 [CmdletBinding()]
 param(
     [switch]$NoRestore,
@@ -20,7 +21,8 @@ $requestedOutput = if ([System.IO.Path]::IsPathFullyQualified($OutputDirectory))
 else {
     Join-Path $repositoryRoot $OutputDirectory
 }
-$outputPath = [System.IO.Path]::GetFullPath($requestedOutput)
+$outputPath = [System.IO.Path]::TrimEndingDirectorySeparator(
+    [System.IO.Path]::GetFullPath($requestedOutput))
 $isWindowsPlatform = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
 $pathComparison = if ($isWindowsPlatform) {
     [System.StringComparison]::OrdinalIgnoreCase
@@ -37,12 +39,13 @@ if (-not $outputPath.StartsWith($requiredPrefix, $pathComparison)) {
 }
 
 $archivePath = "${outputPath}.zip"
-$revision = (git -c "safe.directory=$safeRepository" rev-parse --verify HEAD).Trim()
+$revisionOutput = @(git -C $repositoryRoot -c "safe.directory=$safeRepository" rev-parse --verify HEAD)
+$revision = ($revisionOutput -join "").Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($revision)) {
     throw "Unable to identify the source revision."
 }
 
-$workingTreeChanges = @(git -c "safe.directory=$safeRepository" status --porcelain --untracked-files=all)
+$workingTreeChanges = @(git -C $repositoryRoot -c "safe.directory=$safeRepository" status --porcelain --untracked-files=all)
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to inspect the source working tree."
 }
@@ -69,20 +72,73 @@ function Invoke-Checked {
 }
 
 function Assert-OutputDoesNotExist {
+    Assert-NoReparseAncestors $outputPath
+    Assert-NoReparseAncestors $archivePath
     if ((Test-Path -LiteralPath $outputPath) -or (Test-Path -LiteralPath $archivePath)) {
         throw "Test build output already exists. Choose a new -OutputDirectory or remove the old ignored artifact manually."
     }
 }
 
+function Assert-NoReparseAncestors {
+    param([string]$Path)
+
+    $currentPath = [System.IO.Path]::GetFullPath($Path)
+    while (-not [string]::IsNullOrEmpty($currentPath)) {
+        # Get-Item (rather than Test-Path alone) also identifies a dangling link.
+        $item = Get-Item -LiteralPath $currentPath -Force -ErrorAction SilentlyContinue
+        if ($null -ne $item -and ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw "Package input/output paths must not traverse symbolic links, junctions, or reparse points."
+        }
+
+        $currentPath = [System.IO.Path]::GetDirectoryName($currentPath)
+    }
+}
+
+function Get-TrackedSyntheticSamples {
+    $indexEntries = @(git -C $repositoryRoot -c "safe.directory=$safeRepository" -c core.quotepath=false ls-files --stage -- `
+        samples/synthetic/minimal.project.json samples/synthetic/content samples/synthetic/scenarios samples/synthetic/sessions)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to enumerate tracked synthetic samples."
+    }
+
+    $samples = @(
+        foreach ($entry in $indexEntries) {
+            # Reject symlink modes, unresolved index entries, and quoted/unusual pathnames.
+            if ($entry -notmatch '^100(?:644|755) [0-9a-f]+ 0\t(samples/synthetic/[^\x00-\x1f"\\]+)$') {
+                throw "Packaged synthetic samples must be ordinary tracked files with safe names."
+            }
+
+            $relativePath = $Matches[1]
+            if ([System.IO.Path]::GetExtension($relativePath) -ine ".json") {
+                throw "Only project-owned tracked JSON metadata is allowed in the headless sample package."
+            }
+
+            $sourcePath = Join-Path $repositoryRoot $relativePath
+            Assert-NoReparseAncestors $sourcePath
+            if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+                throw "A tracked synthetic sample is missing or is not a regular file."
+            }
+
+            $relativePath
+        }
+    )
+    if ($samples -notcontains "samples/synthetic/minimal.project.json") {
+        throw "The tracked synthetic project manifest is required."
+    }
+
+    return $samples
+}
+
 function Copy-SyntheticSamples {
     $sampleOutput = Join-Path $outputPath "samples"
     New-Item -ItemType Directory -Path $sampleOutput | Out-Null
-    Copy-Item -LiteralPath (Join-Path $repositoryRoot "samples/synthetic/minimal.project.json") -Destination $sampleOutput
-    foreach ($directoryName in @("content", "scenarios", "sessions")) {
-        Copy-Item `
-            -LiteralPath (Join-Path $repositoryRoot "samples/synthetic/$directoryName") `
-            -Destination $sampleOutput `
-            -Recurse
+    foreach ($relativePath in $trackedSamples) {
+        $sourcePath = Join-Path $repositoryRoot $relativePath
+        $destination = Join-Path $sampleOutput $relativePath.Substring("samples/synthetic/".Length)
+        Assert-NoReparseAncestors $sourcePath
+        Assert-NoReparseAncestors $destination
+        New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
+        Copy-Item -LiteralPath $sourcePath -Destination $destination
     }
 }
 
@@ -116,6 +172,10 @@ Try the validated synthetic project:
   $gameCommand validate-project ./samples/minimal.project.json
   $gameCommand summary-project ./samples/minimal.project.json
   $gameCommand render-project ./samples/minimal.project.json --width 8 --height 6
+
+Start an interactive synthetic session (changes stay in memory):
+
+  $gameCommand play-open-grid ./samples/minimal.project.json
 
 Inspect and edit project-owned JSON metadata:
 
@@ -151,6 +211,13 @@ function Write-Checksums {
 Push-Location $repositoryRoot
 try {
     Assert-OutputDoesNotExist
+    $trackedSamples = @(Get-TrackedSyntheticSamples)
+    foreach ($artifactPath in @($outputPath, $archivePath)) {
+        git -C $repositoryRoot -c "safe.directory=$safeRepository" check-ignore --quiet -- $artifactPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "The package directory and archive must remain ignored by Git."
+        }
+    }
     New-Item -ItemType Directory -Path $outputPath | Out-Null
 
     if (-not $NoRestore) {
@@ -182,7 +249,8 @@ try {
     }
 
     Write-Checksums
-    Compress-Archive -Path (Join-Path $outputPath "*") -DestinationPath $archivePath
+    $archiveInputs = @(Get-ChildItem -LiteralPath $outputPath -Force | ForEach-Object { $_.FullName })
+    Compress-Archive -LiteralPath $archiveInputs -DestinationPath $archivePath
     Write-Host "Headless test build created."
     Write-Host "Directory: $outputPath"
     Write-Host "Archive: $archivePath"

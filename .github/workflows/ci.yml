@@ -29,6 +29,9 @@ jobs:
       - name: Publish and smoke-test headless package
         shell: pwsh
         run: |
+          ./scripts/test-headless-packaging.ps1
           ./scripts/publish-headless-test-build.ps1 -NoRestore -OutputDirectory artifacts/builds/ci-smoke
           dotnet ./artifacts/builds/ci-smoke/game/DisciplesRemaster.Godot.dll render-project ./artifacts/builds/ci-smoke/samples/minimal.project.json --width 8 --height 6
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged game smoke test failed.' }
           dotnet ./artifacts/builds/ci-smoke/editor/DisciplesRemaster.Editor.dll validate-content ./artifacts/builds/ci-smoke/samples/content/synthetic.package.json
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged editor smoke test failed.' }
