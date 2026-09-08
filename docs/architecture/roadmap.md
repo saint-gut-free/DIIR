@@ -37,6 +37,7 @@
 - typed content metadata имеет bounded undo/redo session и headless-команды create/add/rename/remove с validation-before-save.
 - bounded deterministic text viewport проверяет полную scene/runtime projection до подключения настоящего Godot renderer.
 - reproducible headless test package публикует game/editor CLI и только tracked synthetic samples в ignored `artifacts/builds/`.
+- интерактивный in-memory host связывает selection, movement preview/confirmation, диагностический viewport и смену хода; controller повторно проверяет правила перед применением движения.
 
 ## Следующие milestones
 

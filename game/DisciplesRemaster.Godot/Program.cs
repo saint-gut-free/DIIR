@@ -28,6 +28,8 @@ var projectSceneLoader = new NativeProjectSceneLoader(projectLoader, scenarioVal
 
 return args.FirstOrDefault() switch
 {
+    "play-open-grid" =>
+        InteractiveProjectCommand.Run(args, projectSceneLoader, sessionService, Console.In, Console.Out, Console.Error),
     "validate-project" or "summary-project" or "render-project" =>
         HeadlessProjectCommand.Run(args, projectSceneLoader, Console.Out, Console.Error),
     "replay-open-grid" =>

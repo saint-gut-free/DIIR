@@ -186,7 +186,7 @@ public static class HeadlessProjectCommand
         return true;
     }
 
-    private static int WriteFailure(
+    internal static int WriteFailure(
         NativeProjectSceneLoadResult load,
         string path,
         TextWriter error)

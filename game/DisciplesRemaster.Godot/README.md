@@ -9,6 +9,7 @@ No Godot SDK was installed automatically. The current assembly deliberately rema
 Until a compatible Godot .NET installation is available, the project is also a runnable headless host for project-owned runtime checkpoints:
 
 ```powershell
+dotnet run --project game/DisciplesRemaster.Godot -- play-open-grid samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- validate-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- summary-project samples/synthetic/minimal.project.json
 dotnet run --project game/DisciplesRemaster.Godot -- render-project samples/synthetic/minimal.project.json --width 20 --height 12
@@ -18,6 +19,8 @@ dotnet run --project game/DisciplesRemaster.Godot -- advance-turn samples/synthe
 dotnet run --project game/DisciplesRemaster.Godot -- move-open-grid samples/synthetic/sessions/minimal-session.json blue-actor 2 1 --output artifacts/runtime/after-move.session.json
 dotnet run --project game/DisciplesRemaster.Godot -- replay-open-grid samples/synthetic/sessions/minimal-session.json samples/synthetic/sessions/minimal-actions.json --output artifacts/runtime/replayed.session.json
 ```
+
+`play-open-grid` starts an interactive in-memory session. Try `select blue-actor`, `preview 2 1`, `confirm`, `show`, and `end-turn`; `help` lists all commands and `quit` exits. Selection and preview belong to the outer adapter; movement and turns are still evaluated by Core. Confirmation rechecks the traversal policy, and rejected actions leave the checkpoint unchanged. Source documents are read only throughout this session. See [session interaction v1](../../docs/specifications/native-project-session-interaction-v1.md).
 
 `move-open-grid` is intentionally explicit: it uses the project-owned orthogonal topology and treats every in-bounds position as passable. It is a test harness, not a claim about terrain, occupancy, or original-game movement rules. Omitting `--output` atomically updates the input checkpoint.
 

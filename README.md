@@ -58,6 +58,14 @@ dotnet run --project game/DisciplesRemaster.Godot -- replay-open-grid samples/sy
 
 `open-grid` явно обозначает тестовую политику проходимости; она не считается механикой Disciples II.
 
+Интерактивный цикл позволяет выбрать runtime-актёра, проверить маршрут, подтвердить движение и завершить ход:
+
+```powershell
+dotnet run --project game/DisciplesRemaster.Godot -- play-open-grid samples/synthetic/minimal.project.json
+```
+
+Попробуйте `select blue-actor`, `preview 2 1`, `confirm`, `show`, `end-turn`; `help` показывает команды. Изменения существуют только в памяти до `quit`, исходные документы не пересохраняются. Контракт описан в [session interaction v1](docs/specifications/native-project-session-interaction-v1.md).
+
 ## Требования и команды
 
 Требуется .NET SDK 10.0.302 или совместимый SDK 10.x и Git. Godot на текущем этапе не требуется.
@@ -82,7 +90,7 @@ dotnet test
 ./scripts/publish-headless-test-build.ps1
 ```
 
-Результат и ZIP помещаются только в ignored `artifacts/builds/`. Пакет содержит game/editor CLI и tracked synthetic samples, но не содержит original-game materials. Для запуска требуется .NET 10 runtime; это диагностический предшественник, а не графический Godot build.
+Для скрипта упаковки нужен PowerShell 7. Результат и ZIP помещаются только в ignored `artifacts/builds/`. Пакет содержит game/editor CLI и tracked synthetic samples, но не содержит original-game materials. Для запуска требуется .NET 10 runtime; это диагностический предшественник, а не графический Godot build.
 
 ## Структура
 
